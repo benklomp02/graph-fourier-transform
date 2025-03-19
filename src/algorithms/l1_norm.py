@@ -1,5 +1,4 @@
 import numpy as np
-from itertools import combinations_with_replacement, permutations
 from functools import reduce, partial
 from typing import List
 
@@ -7,19 +6,34 @@ from src.utils.measurements import S
 from src.utils.verifications import is_orthonormal_basis
 from src.utils.graphs import comet
 
+MAX_SIZE = 8
+
 
 def get_all_partition_matrices(n: int, m: int):
     """Generating all partition matrices for a signal of size n with m different values."""
-    assert m >= 2
+    # 2 conditions
+    # Each column contains a single element 0 <= x_i < m
+    # Every element 0, ..., m - 1 must be used at least once
+    assert MAX_SIZE >= n >= m >= 2
     M = np.zeros((n, m))
-    for comb in combinations_with_replacement(range(m), n):
-        if len(set(comb)) < m:
-            continue
-        for perm in permutations(comb):
-            M.fill(0)
-            for i, j in enumerate(perm):
-                M[i, j] = 1
+
+    def f(i, free, toBeUsed):
+        if i == n:
             yield M
+        else:
+            for j in range(m):
+                if (toBeUsed >> j) & 0x1:
+                    M[i][j] = 1
+                    yield from f(i + 1, free ^ (1 << j), toBeUsed ^ (1 << j))
+                    M[i][j] = 0
+            if n - i > toBeUsed.bit_count():
+                for j in range(m):
+                    if (free >> j) & 0x1:
+                        M[i][j] = 1
+                        yield from f(i + 1, free, toBeUsed)
+                        M[i][j] = 0
+
+    yield from f(0, 0, (1 << m) - 1)
 
 
 def compute_first_x(M: np.ndarray) -> np.ndarray:
@@ -60,7 +74,7 @@ def compute_l1_norm_basis_undirected(n: int, weights: List[List[int]]) -> np.nda
     Returns:
         np.ndarray: An orthonormal basis
     """
-    assert 2 <= n <= 7
+    assert 2 <= n <= MAX_SIZE
     assert len(weights) == n and all(len(row) == n for row in weights)
     u1 = np.ones(n) / np.sqrt(n)
     u2 = min(
@@ -82,4 +96,4 @@ def run_example(n, weights):
 
 if __name__ == "__main__":
     np.set_printoptions(precision=3, suppress=True, linewidth=100)
-    run_example(*comet(5))
+    run_example(*comet(MAX_SIZE))

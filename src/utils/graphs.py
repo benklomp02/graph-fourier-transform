@@ -5,7 +5,7 @@ from collections import deque
 
 
 # ---- some constants ---
-NUM_TESTS = 100
+NUM_TESTS = 20
 MAX_SIZE_LARGE = 20
 MAX_SIZE_SMALL = 7
 MAX_WEIGHT = 10
@@ -96,7 +96,9 @@ def write_test_case(file_name, create_graph, max_size):
 
 
 def write_test_case_fixed_size(create_graph, fixed_size):
-    with open(f"public/input/fixed_sized/fixed_size_{fixed_size}.txt", "w") as f:
+    with open(
+        f"public/input/fixed_sized/fixed_size_{fixed_size}_{NUM_TESTS}.txt", "w"
+    ) as f:
         print(NUM_TESTS, file=f)
         for _ in range(NUM_TESTS):
             print(fixed_size, file=f)
@@ -106,7 +108,7 @@ def write_test_case_fixed_size(create_graph, fixed_size):
 
 
 if __name__ == "__main__":
-    write_test_case("small", lambda n: simple_graph(n, 0.5), MAX_SIZE_SMALL)
+    # write_test_case("small", lambda n: simple_graph(n, 0.5), MAX_SIZE_SMALL)
     # write_test_case("large", lambda n: simple_graph(n, 0.5), MAX_SIZE_LARGE)
-    # write_test_case_fixed_size(lambda n: simple_graph(n, 0.5), 8)
-    ...
+    for i in range(3, 8):
+        write_test_case_fixed_size(lambda n: simple_graph(n, 0.5), i)
