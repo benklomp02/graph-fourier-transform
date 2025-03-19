@@ -11,9 +11,6 @@ MAX_SIZE = 8
 
 def get_all_partition_matrices(n: int, m: int):
     """Generating all partition matrices for a signal of size n with m different values."""
-    # 2 conditions
-    # Each column contains a single element 0 <= x_i < m
-    # Every element 0, ..., m - 1 must be used at least once
     assert MAX_SIZE >= n >= m >= 2
     M = np.zeros((n, m))
 
