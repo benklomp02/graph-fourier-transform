@@ -9,9 +9,9 @@ from src.utils.graphs import next_graph_input
 
 
 # --- Tests ---
-@pytest.mark.parametrize("file_name", ["small.txt"])
-def _test_is_orthonormal_basis_laplacian(file_name):
-    with open(f"public/input/{file_name}", "r") as f:
+@pytest.mark.parametrize("file_path", ["public/input/undirected/input_N6_t100.txt"])
+def _test_is_orthonormal_basis_laplacian(file_path):
+    with open(file_path, "r") as f:
         num_tests = int(f.readline())
         assert all(
             is_orthonormal_basis(compute_laplacian_basis(*next_graph_input(f)))
@@ -19,9 +19,9 @@ def _test_is_orthonormal_basis_laplacian(file_name):
         )
 
 
-@pytest.mark.parametrize("file_name", ["small.txt"])
-def test_is_orthonormal_basis_greedy(file_name):
-    with open(f"public/input/{file_name}", "r") as f:
+@pytest.mark.parametrize("file_path", ["public/input/undirected/input_N6_t100.txt"])
+def test_is_orthonormal_basis_greedy(file_path):
+    with open(f"public/input/{file_path}", "r") as f:
         num_tests = int(f.readline())
         assert all(
             is_orthonormal_basis(compute_greedy_basis_undirected(*next_graph_input(f)))
@@ -29,9 +29,9 @@ def test_is_orthonormal_basis_greedy(file_name):
         )
 
 
-@pytest.mark.parametrize("file_name", ["small.txt"])
-def test_is_orthonormal_basis_l1_norm(file_name):
-    with open(f"public/input/{file_name}", "r") as f:
+@pytest.mark.parametrize("file_path", ["public/input/undirected/input_N6_t100.txt"])
+def test_is_orthonormal_basis_l1_norm(file_path):
+    with open(f"public/input/{file_path}", "r") as f:
         num_tests = int(f.readline())
         assert all(
             is_orthonormal_basis(compute_l1_norm_basis_undirected(*next_graph_input(f)))

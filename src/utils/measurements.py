@@ -23,7 +23,16 @@ def S(x: np.ndarray, weights: List[List[int]]) -> float:
     x = np.ravel(x)
     assert len(x) == len(weights)
     return sum(
-        weights[i][j] * (x[i] - x[j]) ** 2 for i, j in combinations(range(len(x)), 2)
+        weights[i][j] * abs(x[i] - x[j]) for i, j in combinations(range(len(x)), 2)
+    )
+
+
+def S_directed(x: np.ndarray, weights: List[List[int]]) -> float:
+    x = np.ravel(x)
+    assert len(x) == len(weights)
+    return sum(
+        max((x[i] - x[j]) * weights[i][j], (x[j] - x[i]) * weights[j][i])
+        for i, j in combinations(range(len(x)), 2)
     )
 
 

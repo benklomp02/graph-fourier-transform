@@ -1,6 +1,4 @@
 import numpy as np
-from itertools import combinations
-from collections import deque
 
 
 def is_normalized(x: np.ndarray) -> bool:
