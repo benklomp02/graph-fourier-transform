@@ -1,19 +1,22 @@
 import numpy as np
 from typing import List
+import networkx as nx
+from scipy.linalg import eigh
 
 from src.utils.verifications import is_orthonormal_basis
-from src.utils.graphs import comet
+from src.utils.graph_generator import comet
+from src.utils.visualisation import visualize_graph
 
 
 def laplacian_matrix(n: int, weights: List[List[int]]):
-    degree_matrix = np.zeros((n, n))
-    for i in range(n):
-        degree_matrix[i][i] = sum(weights[i])
-    return degree_matrix - np.array(weights)
+    g = nx.from_numpy_array(np.array(weights), create_using=nx.DiGraph)
+    return nx.laplacian_matrix(g).toarray()
 
 
 def compute_laplacian_basis(n: int, weights: List[List[int]]):
-    return np.linalg.eig(laplacian_matrix(n, weights)).eigenvectors
+    laplacian = laplacian_matrix(n, weights)
+    _, eigenvectors = eigh(laplacian)
+    return eigenvectors
 
 
 def run_example(n, weights):

@@ -3,7 +3,7 @@ from itertools import combinations
 import time
 from statistics import mean
 from typing import List
-from src.utils.graphs import next_graph_input
+from src.utils.graph_generator import next_graph_input
 
 
 def W(A: int, B: int, weights: List[List[int]]) -> float:

@@ -2,16 +2,16 @@ import numpy as np
 from functools import reduce, partial
 from typing import List
 
-from src.utils.measurements import S
+from src.utils.measurements import S, S_directed
 from src.utils.verifications import is_orthonormal_basis
-from src.utils.graphs import comet
+from src.utils.graph_generator import comet
 
 MAX_SIZE = 8
 
 
 def get_all_partition_matrices(n: int, m: int):
     """Generating all partition matrices for a signal of size n with m different values."""
-    assert MAX_SIZE >= n >= m >= 2
+    assert n >= m >= 2
     M = np.zeros((n, m))
 
     def f(i, free, toBeUsed):
@@ -71,12 +71,31 @@ def compute_l1_norm_basis_undirected(n: int, weights: List[List[int]]) -> np.nda
     Returns:
         np.ndarray: An orthonormal basis
     """
-    assert 2 <= n <= MAX_SIZE
-    assert len(weights) == n and all(len(row) == n for row in weights)
     u1 = np.ones(n) / np.sqrt(n)
     u2 = min(
         map(compute_first_x, get_all_partition_matrices(n, 2)),
         key=partial(S, weights=weights),
+    )
+    basis = reduce(
+        partial(expand_basis_set, weights=weights, n=n), range(3, 1 + n), [u1, u2]
+    )
+    return np.column_stack(basis)
+
+
+def compute_l1_norm_basis_directed(n: int, weights: List[List[int]]) -> np.ndarray:
+    """Computes the l1 norm basis under the function S(x) in exponential time.
+
+    Args:
+        n (int): The number of vertices
+        weights (List[List[int]]): The weights for an undirected graph input for n vertices
+
+    Returns:
+        np.ndarray: An orthonormal basis
+    """
+    u1 = np.ones(n) / np.sqrt(n)
+    u2 = min(
+        map(compute_first_x, get_all_partition_matrices(n, 2)),
+        key=partial(S_directed, weights=weights),
     )
     basis = reduce(
         partial(expand_basis_set, weights=weights, n=n), range(3, 1 + n), [u1, u2]

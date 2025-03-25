@@ -12,7 +12,12 @@ from src.utils.measurements import (
     relative_error_single_vector,
     average_time,
 )
-from src.utils.graphs import next_graph_input
+from src.utils.graph_generator import next_graph_input
+from src.utils.approx import (
+    compute_nterm_error,
+    compute_random_laplacian_signal,
+    approx_error,
+)
 
 MAX_SIZE = 7
 SMALL_SET_SIZE = 20
@@ -82,15 +87,18 @@ def run_experiment_file(n_range, num_tests, compute_basis, metric_fn):
 
 
 def plot_and_save(
-    title, x_axis, series, series_labels, xlabel, ylabel, num_tests, save_fig
+    title, x_axis, series, series_labels, xlabel, ylabel, num_tests, save_fig, show_plot
 ):
     for data, label in zip(series, series_labels):
         plt.plot(x_axis, data, label=label, marker="o")
-    plt_config(title, xlabel, ylabel, log=False)
     if save_fig:
+        plt_config(title, xlabel, ylabel, log=False)
         plt.savefig(saved_filename(title, num_tests))
         plt_config(title, xlabel, ylabel, log=True)
         plt.savefig(saved_filename_log(title, num_tests))
+    plt_config(title, xlabel, ylabel, log=False)
+    if show_plot:
+        plt.show()
     plt.clf()
 
 
@@ -120,6 +128,9 @@ def comparison_of_variation_single_vector(
         x_axis, num_tests, compute_laplacian_basis, metric_fn
     )
 
+    print(
+        f"Finished comparison of variation on single vector k={k+1} in {time.time()-start_time:.2f} seconds."
+    )
     plot_title = f"Comparison of variation on single vector k={k+1}"
     plot_and_save(
         plot_title,
@@ -128,15 +139,10 @@ def comparison_of_variation_single_vector(
         ["Greedy", "Laplacian"],
         "N",
         "Average relative error",
-        num_tests,
-        save_fig,
+        num_tests=num_tests,
+        save_fig=save_fig,
+        show_plot=show_plot,
     )
-
-    print(
-        f"Finished comparison of variation on single vector k={k+1} in {time.time()-start_time:.2f} seconds."
-    )
-    if show_plot:
-        plt.show()
 
 
 def comparison_of_variation(
@@ -157,7 +163,7 @@ def comparison_of_variation(
     laplacian_errors = run_experiment(
         x_axis, num_tests, compute_laplacian_basis, metric_fn
     )
-
+    print(f"Finished comparison of variation in {time.time()-start_time:.2f} seconds.")
     plot_title = "Comparison of variation"
     plot_and_save(
         plot_title,
@@ -166,13 +172,10 @@ def comparison_of_variation(
         ["Greedy", "Laplacian"],
         "N",
         "Average relative error",
-        num_tests,
-        save_fig,
+        num_tests=num_tests,
+        save_fig=save_fig,
+        show_plot=show_plot,
     )
-
-    print(f"Finished comparison of variation in {time.time()-start_time:.2f} seconds.")
-    if show_plot:
-        plt.show()
 
 
 def comparison_of_time(
@@ -197,7 +200,7 @@ def comparison_of_time(
     series = [
         run_experiment_file(x_axis, num_tests, basis, time_metric) for basis in xfunc
     ]
-
+    print(f"Finished comparison of time in {time.time()-start_time:.2f} seconds.")
     plot_title = "Comparison of time"
     plot_and_save(
         plot_title,
@@ -206,16 +209,60 @@ def comparison_of_time(
         series_labels,
         "N",
         "Average time",
-        num_tests,
-        save_fig,
+        num_tests=num_tests,
+        save_fig=save_fig,
+        show_plot=show_plot,
     )
 
-    print(f"Finished comparison of time in {time.time()-start_time:.2f} seconds.")
-    if show_plot:
-        plt.show()
+
+def comparison_of_nterm_approx(
+    nlow: int, nhigh: int, num_tests=LARGE_SET_SIZE, save_fig=True, show_plot=False
+):
+    assert 3 <= nlow < nhigh <= 8
+    print("Starting comparison of n-term approximation.")
+    start_time = time.time()
+
+    x_axis = range(nlow, nhigh + 1)
+
+    def metric_fn(n, weights, compute_basis):
+        signal = compute_random_laplacian_signal(n, weights)
+        errors = []
+        for n_approx in range(1, n + 1):
+            y_n = compute_nterm_error(n_approx, signal, weights, compute_basis)
+            errors.append(approx_error(signal, y_n))
+        return mean(errors)
+
+    greedy_errors = run_experiment(
+        x_axis, num_tests, compute_greedy_basis_undirected, metric_fn
+    )
+
+    laplacian_errors = run_experiment(
+        x_axis, num_tests, compute_laplacian_basis, metric_fn
+    )
+    print(
+        f"Finished comparison of n-term approximation in {time.time()-start_time:.2f} seconds."
+    )
+    plot_title = "Comparison of n-term approximation"
+    plot_and_save(
+        plot_title,
+        x_axis,
+        [greedy_errors, laplacian_errors],
+        ["Greedy", "Laplacian"],
+        "n",
+        "Average relative error",
+        num_tests=num_tests,
+        save_fig=save_fig,
+        show_plot=show_plot,
+    )
 
 
 if __name__ == "__main__":
+    comparison_of_variation_single_vector(num_tests=SMALL_SET_SIZE)
+    comparison_of_variation(num_tests=SMALL_SET_SIZE)
+    comparison_of_time(num_tests=SMALL_SET_SIZE)
+    comparison_of_nterm_approx(3, 8, num_tests=SMALL_SET_SIZE)
+
     comparison_of_variation_single_vector(num_tests=LARGE_SET_SIZE)
     comparison_of_variation(num_tests=LARGE_SET_SIZE)
     comparison_of_time(num_tests=LARGE_SET_SIZE)
+    comparison_of_nterm_approx(3, 8, num_tests=LARGE_SET_SIZE)

@@ -3,7 +3,7 @@ from itertools import combinations
 from typing import List
 
 from src.utils.verifications import is_orthonormal_basis
-from src.utils.graphs import path, comet, sensor
+from src.utils.graph_generator import path, comet, sensor
 
 
 # Avoid KeyError by using a sorted tuple as key
@@ -48,13 +48,53 @@ def compute_greedy_basis_undirected(n: int, weights: List[List[int]]) -> np.ndar
     return np.column_stack(basis[::-1])
 
 
-def run_example(n: int, weights: List[List[int]]):
-    basis = compute_greedy_basis_undirected(n, weights)
-    np.set_printoptions(precision=3, suppress=True, linewidth=100)
-    print("Greedy basis:")
-    print(basis)
-    assert is_orthonormal_basis(basis)
+def compute_greedy_basis_directed(n: int, weights: List[List[int]]) -> np.ndarray:
+    """Computes the greedy basis.
+
+    Args:
+        n (int): The number of vertices
+        weights (List[List[int]]): The weights for a directed graph input for n vertices
+
+    Returns:
+        np.ndarray: An orthonormal basis
+    """
+    tau = {(1 << i) for i in range(n)}
+    memo = {(1 << i, 1 << j): weights[i][j] for j in range(n) for i in range(n)}
+    basis = []
+    for _ in range(n - 1):
+        A, B = max(
+            [(A, B) for A in tau for B in tau if A != B],
+            key=lambda ab: memo[*ab] / (ab[0].bit_count() * ab[1].bit_count()),
+        )
+        del memo[A, B]
+        del memo[B, A]
+        tau -= {A, B}
+        memo.update({(A | B, C): memo[A, C] + memo[B, C] for C in tau})
+        memo.update({(C, A | B): memo[C, A] + memo[C, B] for C in tau})
+        tau.add(A | B)
+        t = 1 / np.sqrt(A.bit_count() * B.bit_count() * (A.bit_count() + B.bit_count()))
+        a = np.isin(np.arange(n), [i for i in range(32) if (A >> i) & 0x1]).astype(int)
+        b = np.isin(np.arange(n), [i for i in range(32) if (B >> i) & 0x1]).astype(int)
+        u = -t * B.bit_count() * a + t * A.bit_count() * b
+        basis.append(u)
+    basis.append(np.sqrt(1 / n) * np.ones(n))
+    return np.column_stack(basis[::-1])
+
+
+def run_example(n: int, weights: List[List[int]], is_directed: bool = False):
+    if is_directed:
+        basis = compute_greedy_basis_directed(n, weights)
+        print("Greedy basis directed:")
+        print(basis)
+        assert is_orthonormal_basis(basis)
+    else:
+        basis = compute_greedy_basis_undirected(n, weights)
+        print("Greedy basis undirected:")
+        print(basis)
+        assert is_orthonormal_basis(basis)
 
 
 if __name__ == "__main__":
-    run_example(*comet(5))
+    np.set_printoptions(precision=3, suppress=True, linewidth=100)
+    run_example(*comet(6), is_directed=False)
+    run_example(*comet(6), is_directed=True)
