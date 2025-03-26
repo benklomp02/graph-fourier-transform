@@ -1,80 +1,57 @@
 import numpy as np
 from functools import reduce, partial
 from typing import List
+from line_profiler import profile
 
-from src.utils.measurements import S, S_directed
-from src.utils.verifications import is_orthonormal_basis
-from src.utils.graph_generator import comet
+from src.utils.objectives import S_undirected, S_directed
+from tests.utils.verifications import is_orthonormal_basis
+from tests.IO.examples import comet
+from src.utils.solver import solve_minimisation_problem
+from src.utils.partition_matrix import (
+    get_all_partition_matrices,
+    get_all_solution_vectors_par,
+)
 
 MAX_SIZE = 8
 
-
-def get_all_partition_matrices(n: int, m: int):
-    """Generating all partition matrices for a signal of size n with m different values."""
-    assert n >= m >= 2
-    M = np.zeros((n, m))
-
-    def f(i, free, toBeUsed):
-        if i == n:
-            yield M
-        else:
-            for j in range(m):
-                if (toBeUsed >> j) & 0x1:
-                    M[i][j] = 1
-                    yield from f(i + 1, free ^ (1 << j), toBeUsed ^ (1 << j))
-                    M[i][j] = 0
-            if n - i > toBeUsed.bit_count():
-                for j in range(m):
-                    if (free >> j) & 0x1:
-                        M[i][j] = 1
-                        yield from f(i + 1, free, toBeUsed)
-                        M[i][j] = 0
-
-    yield from f(0, 0, (1 << m) - 1)
+# --- Sequential version ---
 
 
-def compute_first_x(M: np.ndarray) -> np.ndarray:
-    """Solves the minimisation problem for constant signal."""
-    c1, c2 = np.sum(M, axis=0)
-    a = np.array([1.0, -c1 / c2])
-    _x = M @ a
-    return _x / np.linalg.norm(_x)
-
-
-def compute_x(M: np.ndarray, U: np.ndarray) -> np.ndarray:
-    """Solves the general minimisation problem."""
-    _, _, Vh = np.linalg.svd(U.T @ M)
-    _x = M @ Vh[-1, :]
-    return _x / np.linalg.norm(_x)
-
-
+@profile
 def expand_basis_set(
-    basis: List[np.ndarray], k: int, weights: List[List], n: int
+    basis: List[np.ndarray], k: int, weights: np.ndarray, n: int
 ) -> List[np.ndarray]:
     """Computes the kth iteration of the l1 norm algorithm."""
     assert k >= 3
     U = np.column_stack(basis)
     uk = min(
-        map(partial(compute_x, U=U), get_all_partition_matrices(n, k)),
-        key=partial(S, weights=weights),
+        map(
+            partial(solve_minimisation_problem, U=U, is_constant=False),
+            get_all_partition_matrices(n, k),
+        ),
+        key=partial(S_undirected, weights=weights),
     )
     return basis + [uk]
 
 
-def compute_l1_norm_basis_undirected(n: int, weights: List[List[int]]) -> np.ndarray:
+@profile
+def compute_l1_norm_basis_undirected(n: int, weights: np.ndarray) -> np.ndarray:
     """Computes the l1 norm basis under the function S(x) in exponential time.
 
     Args:
         n (int): The number of vertices
-        weights (List[List[int]]): The weights for an undirected graph input for n vertices
+        weights (np.ndarray): The weights for an undirected graph input for n vertices
 
     Returns:
         np.ndarray: An orthonormal basis
     """
     u1 = np.ones(n) / np.sqrt(n)
     u2 = min(
-        map(compute_first_x, get_all_partition_matrices(n, 2)),
-        key=partial(S, weights=weights),
+        map(
+            partial(solve_minimisation_problem, is_constant=True),
+            get_all_partition_matrices(n, 2),
+        ),
+        key=partial(S_undirected, weights=weights),
     )
     basis = reduce(
         partial(expand_basis_set, weights=weights, n=n), range(3, 1 + n), [u1, u2]
@@ -82,7 +59,7 @@ def compute_l1_norm_basis_undirected(n: int, weights: List[List[int]]) -> np.nda
     return np.column_stack(basis)
 
 
-def compute_l1_norm_basis_directed(n: int, weights: List[List[int]]) -> np.ndarray:
+def compute_l1_norm_basis_directed(n: int, weights: np.ndarray) -> np.ndarray:
     """Computes the l1 norm basis under the function S(x) in exponential time.
 
     Args:
@@ -94,7 +71,10 @@ def compute_l1_norm_basis_directed(n: int, weights: List[List[int]]) -> np.ndarr
     """
     u1 = np.ones(n) / np.sqrt(n)
     u2 = min(
-        map(compute_first_x, get_all_partition_matrices(n, 2)),
+        map(
+            partial(solve_minimisation_problem, is_constant=True),
+            get_all_partition_matrices(n, 2),
+        ),
         key=partial(S_directed, weights=weights),
     )
     basis = reduce(
@@ -103,13 +83,54 @@ def compute_l1_norm_basis_directed(n: int, weights: List[List[int]]) -> np.ndarr
     return np.column_stack(basis)
 
 
-def run_example(n, weights):
-    basis = compute_l1_norm_basis_undirected(n, weights)
+# --- Parallel version ---
+def argmin_par(n, k, solve_fn, score_fn):
+    return min(get_all_solution_vectors_par(n, k, solve_fn), key=score_fn)
+
+
+def expand_basis_set_par(
+    basis: List[np.ndarray], k: int, weights: np.ndarray, n: int
+) -> List[np.ndarray]:
+    """Computes the kth iteration of the l1 norm algorithm."""
+    assert k >= 3
+    U = np.column_stack(basis)
+    solve_fn = partial(solve_minimisation_problem, U=U, is_constant=False)
+    score_fn = partial(S_undirected, weights=weights)
+    uk = argmin_par(n, k, solve_fn, score_fn)
+    return basis + [uk]
+
+
+def compute_l1_norm_basis_undirected_par(n: int, weights: np.ndarray) -> np.ndarray:
+    """Computes the l1 norm basis under the function S(x) in exponential time.
+
+    Args:
+        n (int): The number of vertices
+        weights (List[List[int]]): The weights for an undirected graph input for n vertices
+
+    Returns:
+        np.ndarray: An orthonormal basis
+    """
+    u1 = np.ones(n) / np.sqrt(n)
+    solve_fn = partial(solve_minimisation_problem, U=None, is_constant=True)
+    score_fn = partial(S_undirected, weights=weights)
+    u2 = argmin_par(n, 2, solve_fn, score_fn)
+    basis = reduce(
+        partial(expand_basis_set_par, weights=weights, n=n), range(3, 1 + n), [u1, u2]
+    )
+    return np.column_stack(basis)
+
+
+# --- Example ---
+
+
+def run_example(n: int, weights: np.ndarray):
     print("l1 norm basis:")
+    basis = compute_l1_norm_basis_undirected(n, weights)
     print(basis)
     assert is_orthonormal_basis(basis)
 
 
 if __name__ == "__main__":
     np.set_printoptions(precision=3, suppress=True, linewidth=100)
-    run_example(*comet(MAX_SIZE))
+    n, weights = comet(8)
+    run_example(n, np.array(weights))

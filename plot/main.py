@@ -5,15 +5,18 @@ import time
 import os
 
 from src.algorithms.greedy import compute_greedy_basis_undirected
-from src.algorithms.l1_norm import compute_l1_norm_basis_undirected
+from src.algorithms.l1_norm import (
+    compute_l1_norm_basis_undirected,
+    compute_l1_norm_basis_undirected_par,
+)
 from src.algorithms.laplacian import compute_laplacian_basis
-from src.utils.measurements import (
+from tests.utils.measurements import (
     relative_error,
     relative_error_single_vector,
     average_time,
 )
-from src.utils.graph_generator import next_graph_input
-from src.utils.approx import (
+from tests.IO.graph_generator import next_graph_input
+from tests.utils.approx import (
     compute_nterm_error,
     compute_random_laplacian_signal,
     approx_error,
@@ -257,12 +260,15 @@ def comparison_of_nterm_approx(
 
 
 if __name__ == "__main__":
-    comparison_of_variation_single_vector(num_tests=SMALL_SET_SIZE)
-    comparison_of_variation(num_tests=SMALL_SET_SIZE)
+    comparison_of_variation_single_vector(
+        min_N=3, max_N=MAX_SIZE, num_tests=SMALL_SET_SIZE
+    )
+    comparison_of_variation_single_vector(
+        min_N=3, max_N=MAX_SIZE, num_tests=LARGE_SET_SIZE
+    )
+    comparison_of_variation(min_N=3, max_N=MAX_SIZE, num_tests=SMALL_SET_SIZE)
+    comparison_of_variation(min_N=3, max_N=MAX_SIZE, num_tests=LARGE_SET_SIZE)
     comparison_of_time(num_tests=SMALL_SET_SIZE)
-    comparison_of_nterm_approx(3, 8, num_tests=SMALL_SET_SIZE)
-
-    comparison_of_variation_single_vector(num_tests=LARGE_SET_SIZE)
-    comparison_of_variation(num_tests=LARGE_SET_SIZE)
     comparison_of_time(num_tests=LARGE_SET_SIZE)
+    comparison_of_nterm_approx(3, 8, num_tests=SMALL_SET_SIZE)
     comparison_of_nterm_approx(3, 8, num_tests=LARGE_SET_SIZE)

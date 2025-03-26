@@ -1,0 +1,5 @@
+{
+  "python.createEnvironment.contentButton": "hide",
+  "python.testing.pytestPath": "pytest",
+  "python.testing.pytestEnabled": true
+}

@@ -1,0 +1,5 @@
+numpy
+line_profiler
+networkx
+matplotlib
+scipy

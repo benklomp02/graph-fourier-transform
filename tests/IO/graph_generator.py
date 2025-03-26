@@ -1,13 +1,9 @@
 import numpy as np
 import networkx as nx
-from matplotlib import pyplot as plt
 from itertools import combinations
-from collections import deque
-from functools import partial
-from typing import List
 from random import shuffle
 
-from src.utils.visualisation import visualize_graph
+from plot.utils.visualisation import visualize_graph
 
 # ---- some constants ---
 MAX_SIZE_LARGE = 20
@@ -16,40 +12,10 @@ MAX_WEIGHT = 10
 NUM_TESTS = 100
 
 
-# --- some example graphs ---
-def path(n=7):
-    return n, [
-        [1 if i == j + 1 or i == j - 1 else 0 for j in range(n)] for i in range(n)
-    ]
-
-
-def comet(n=7):
-    m = n // 2
-    return n, [
-        [
-            (
-                1
-                if i < m
-                and j == m
-                or i == m
-                and j < m
-                or (i >= m and (i == j - 1 or i == j + 1))
-                else 0
-            )
-            for j in range(n)
-        ]
-        for i in range(n)
-    ]
-
-
-def sensor(n=8):
-    return n, [[1 if i != j else 0 for j in range(n)] for i in range(n)]
-
-
 # ---- some graph generators ---
 def simple_graph_undirected(
     n: int, p: float = 0.5, show_visualization=False
-) -> List[List[int]]:
+) -> np.ndarray:
     """Creates a undirected, simple and connected graph."""
     assert n >= 3
     G = nx.Graph()
@@ -72,12 +38,12 @@ def simple_graph_undirected(
         print("The graph is not connected.")
         visualize_graph(G)
         exit(1)
-    return nx.to_numpy_array(G, weight="weight").astype(int).tolist()
+    return nx.to_numpy_array(G, weight="weight")
 
 
 def simple_graph_directed(
     n: int, p: float = 0.3, show_visualization=False
-) -> List[List[int]]:
+) -> np.ndarray:
     """Creates a directed, simple and strongly connected graph."""
     assert n >= 3
     G = nx.DiGraph()
@@ -118,7 +84,7 @@ def simple_graph_directed(
         print("The graph is not strongly connected")
         visualize_graph(G)
         exit(1)
-    return nx.to_numpy_array(G, weight="weight").astype(int).tolist()
+    return nx.to_numpy_array(G, weight="weight")
 
 
 # --- read test cases ---

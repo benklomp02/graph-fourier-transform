@@ -3,7 +3,6 @@ import matplotlib.pyplot as plt
 
 
 def visualize_graph(G):
-    # Visualize the graph
     pos = nx.spring_layout(G)
     nx.draw(
         G,

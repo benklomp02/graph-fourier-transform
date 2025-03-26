@@ -1,9 +1,8 @@
 import numpy as np
 from itertools import combinations
-from typing import List
 
-from src.utils.verifications import is_orthonormal_basis
-from src.utils.graph_generator import path, comet, sensor
+from tests.utils.verifications import is_orthonormal_basis
+from tests.IO.examples import comet
 
 
 # Avoid KeyError by using a sorted tuple as key
@@ -11,12 +10,12 @@ def make_tuple(a: int, b: int) -> int:
     return (a, b) if a < b else (b, a)
 
 
-def compute_greedy_basis_undirected(n: int, weights: List[List[int]]) -> np.ndarray:
+def compute_greedy_basis_undirected(n: int, weights: np.ndarray) -> np.ndarray:
     """Computes the greedy basis.
 
     Args:
         n (int): The number of vertices
-        weights (List[List[int]]): The weights for an undirected graph input for n vertices
+        weights (np.ndarray): The weights for an undirected graph input for n vertices
 
     Returns:
         np.ndarray: An orthonormal basis
@@ -48,12 +47,12 @@ def compute_greedy_basis_undirected(n: int, weights: List[List[int]]) -> np.ndar
     return np.column_stack(basis[::-1])
 
 
-def compute_greedy_basis_directed(n: int, weights: List[List[int]]) -> np.ndarray:
+def compute_greedy_basis_directed(n: int, weights: np.ndarray) -> np.ndarray:
     """Computes the greedy basis.
 
     Args:
         n (int): The number of vertices
-        weights (List[List[int]]): The weights for a directed graph input for n vertices
+        weights (np.ndarray): The weights for a directed graph input for n vertices
 
     Returns:
         np.ndarray: An orthonormal basis
@@ -81,7 +80,7 @@ def compute_greedy_basis_directed(n: int, weights: List[List[int]]) -> np.ndarra
     return np.column_stack(basis[::-1])
 
 
-def run_example(n: int, weights: List[List[int]], is_directed: bool = False):
+def run_example(n: int, weights: np.ndarray, is_directed: bool = False):
     if is_directed:
         basis = compute_greedy_basis_directed(n, weights)
         print("Greedy basis directed:")
