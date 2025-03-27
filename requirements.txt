@@ -3,3 +3,4 @@ line_profiler
 networkx
 matplotlib
 scipy
+pytest

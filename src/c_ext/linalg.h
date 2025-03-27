@@ -1,7 +1,8 @@
 #ifndef LINALG_H
 #define LINALG_H
 
-double norm(double *a, int len);
-void matvec(double *M, double *v, double *result, int rows, int cols);
+int *build_masked_array(int mask, int n);
+
+int *arg_max_greedy(int n, int *tau, int *memo);
 
 #endif

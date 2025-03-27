@@ -1,43 +1,32 @@
 import ctypes
 import numpy as np
 import os
+from typing import Tuple
 
 
 LIB_PATH = os.path.join(os.path.dirname(__file__), "../c_ext/liblinalg.so")
 lib = ctypes.CDLL(LIB_PATH)
 
-lib.norm.argtypes = [ctypes.POINTER(ctypes.c_double), ctypes.c_int]
-lib.norm.restype = ctypes.c_double
+lib.build_masked_array.restype = ctypes.POINTER(ctypes.c_int)
+lib.build_masked_array.argtypes = [ctypes.c_int, ctypes.c_int]
 
 
-# A slight improvement in performance by 23% compared to the numpy version
-def c_norm(arr: np.ndarray) -> float:
-    arr = arr.astype(np.float64)
-    ptr = arr.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
-    return lib.norm(ptr, arr.size)
+def build_masked_array(mask: int, n: int) -> np.ndarray:
+    c_array_ptr = lib.build_masked_array(mask, n)
+    return np.ctypeslib.as_array(c_array_ptr, shape=(n,))
 
 
-lib.matvec.argtypes = [
-    ctypes.POINTER(ctypes.c_double),
-    ctypes.POINTER(ctypes.c_double),
-    ctypes.POINTER(ctypes.c_double),
+lib.arg_max_greedy.restype = ctypes.POINTER(ctypes.c_int)
+lib.arg_max_greedy.argtypes = [
     ctypes.c_int,
-    ctypes.c_int,
+    np.ctypeslib.ndpointer(dtype=np.int32),
+    np.ctypeslib.ndpointer(dtype=np.float64),
 ]
-lib.matvec.restype = None
 
 
-# This function is by 700% worse than the @ numpy version
-def c_matvec(M: np.ndarray, v: np.ndarray) -> np.ndarray:
-    M = M.astype(np.float64)
-    v = v.astype(np.float64)
-    rows, cols = M.shape
-    result = np.zeros(rows, dtype=np.float64)
-    lib.matvec(
-        M.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
-        v.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
-        result.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
-        rows,
-        cols,
-    )
-    return result
+def arg_max_greedy(n: int, tau: np.ndarray, memo: np.ndarray) -> Tuple[int, int]:
+    tau = np.ascontiguousarray(tau, dtype=np.int32)
+    memo = np.ascontiguousarray(memo, dtype=np.float64)
+    c_array_ptr = lib.arg_max_greedy(n, tau.flatten(), memo.flatten())
+    result = ctypes.cast(c_array_ptr, ctypes.POINTER(ctypes.c_int * 2)).contents
+    return result[0], result[1]

@@ -12,7 +12,7 @@ double W(int A, int B, double *weights, int n)
     return sum;
 }
 
-int count_set_bits(int n)
+static int bit_count(int n)
 {
     int count = 0;
     while (n)
@@ -25,7 +25,7 @@ int count_set_bits(int n)
 
 double F(int A, int B, double *weights, int n)
 {
-    return W(A, B, weights, n) / (count_set_bits(A) * count_set_bits(B));
+    return W(A, B, weights, n) / (bit_count(A) * bit_count(B));
 }
 
 double S_undirected(double *x, double *weights, int n)
