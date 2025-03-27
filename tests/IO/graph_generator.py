@@ -93,7 +93,7 @@ def next_graph_input(f):
     if line == "":
         raise EOFError
     n = int(line)
-    weights = [list(map(int, f.readline().split())) for _ in range(n)]
+    weights = np.array([list(map(int, f.readline().split())) for _ in range(n)])
     return n, weights
 
 

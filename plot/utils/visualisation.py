@@ -1,8 +1,14 @@
 import networkx as nx
 import matplotlib.pyplot as plt
+import numpy as np
 
 
-def visualize_graph(G):
+def visualize_graph_from_weights(weights: np.ndarray):
+    nx_graph = nx.from_numpy_array(weights, create_using=nx.DiGraph)
+    visualize_graph(nx_graph)
+
+
+def visualize_graph(G: nx.Graph):
     pos = nx.spring_layout(G)
     nx.draw(
         G,

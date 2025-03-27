@@ -24,7 +24,7 @@ static int bit_count(int n)
 int *arg_max_greedy(int n, int *tau, double *memo)
 {
     int *result = (int *)malloc(2 * sizeof(int));
-    double max_val = 0.0;
+    double max_val = -1.0;
     int best_a = 0, best_b = 0;
 
     for (int j = 1; j < n; ++j)
