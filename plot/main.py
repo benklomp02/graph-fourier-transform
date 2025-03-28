@@ -4,27 +4,24 @@ import time
 
 from plot.constants import *
 
-from plot.utils.experiment_runner import (
-    run_experiment,
-    run_experiment_file,
-    plot_and_save,
-)
+from plot.utils.experiment_runner import *
 from src.algorithms.greedy import compute_greedy_basis
 from src.algorithms.l1_norm import compute_l1_norm_basis
 from src.algorithms.laplacian import compute_laplacian_basis
-from tests.utils.measurements import (
-    relative_error,
-    relative_error_single_vector,
-    average_time,
-)
-from tests.utils.approx import (
-    compute_nterm_error,
-    compute_random_laplacian_signal,
-    approx_error,
-)
+from tests.utils.measurements import *
+from tests.utils.approx import *
 
 
 def comparison_of_variation_single_vector(k: int = 2):
+    """
+    WARNING: This function is computationally intensive.
+
+    This function compares the variation of the greedy and Laplacian basis
+    for a single vector.
+
+    Args:
+        k (int, optional): The chosen vector indexed by 1. Defaults to 2.
+    """
     print(f"Starting comparison of variation on single vector k={k}.")
     start_time = time.time()
     assert 3 <= MIN_N <= MAX_N and 0 <= k < MIN_N
@@ -62,6 +59,12 @@ def comparison_of_variation_single_vector(k: int = 2):
 
 
 def comparison_of_variation():
+    """
+    WARNING: This function is computationally intensive.
+
+    This function compares the variation of the greedy and Laplacian basis
+    for all vectors.
+    """
     assert 3 <= MIN_N <= MAX_N
     print("Starting comparison of variation.")
     start_time = time.time()
@@ -93,14 +96,26 @@ def comparison_of_variation():
     )
 
 
+DEFAULT_FUNCTIONS = [
+    compute_l1_norm_basis,
+    compute_greedy_basis,
+    compute_laplacian_basis,
+]
+
+DEFAULT_LABELS = ["L1 Norm", "Greedy", "Laplacian"]
+
+
 def comparison_of_time(
-    xfunc: List[Callable] = [
-        compute_l1_norm_basis,
-        compute_greedy_basis,
-        compute_laplacian_basis,
-    ],
-    series_labels: List[str] = ["L1 Norm", "Greedy", "Laplacian"],
+    xfunc: List[Callable] = DEFAULT_FUNCTIONS,
+    series_labels: List[str] = DEFAULT_LABELS,
 ):
+    """
+    WARNING: This function may be computationally intensive depending on the provided functions.
+
+    Args:
+        xfunc (List[Callable], optional): A series of functions for comparison.
+        series_labels (List[str], optional): A series of labels for the provided functions.
+    """
     print("Starting comparison of time.")
     start_time = time.time()
     assert 3 <= MIN_N <= MAX_N
@@ -128,6 +143,9 @@ def comparison_of_time(
 
 
 def comparison_of_nterm_approx():
+    """
+    This function compares the n-term approximation of the greedy and Laplacian basis.
+    """
     assert 3 <= MIN_N <= MAX_N
     print("Starting comparison of n-term approximation.")
     start_time = time.time()

@@ -1,7 +1,7 @@
 import numpy as np
 
 from tests.IO.constants import *
-from tests.IO.graph_generator import random_simple_graph
+from tests.IO.graph import random_simple_graph
 
 
 def _write_test_case(max_size: int):

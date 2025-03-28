@@ -1,4 +1,6 @@
 import time
+from typing import Callable, Tuple
+import numpy as np
 
 from plot.constants import *
 from plot.utils.experiment_runner import run_experiment, plot_and_save
@@ -10,11 +12,14 @@ from tests.utils.measurements import relative_error
 
 
 def compare_algorithms(
-    xcompute_basis,
-    ycompute_basis,
+    xcompute_basis: Callable[[int, np.ndarray], np.ndarray],
+    ycompute_basis: Callable[[int, np.ndarray], np.ndarray],
 ):
-    """
-    Compare the performance of two base algorithms.
+    """This function compares the performance of two algorithms for computing a basis of a graph.
+
+    Args:
+        xcompute_basis (_type_): Function to compute the basis using the first algorithm.
+        ycompute_basis (_type_): Function to compute the basis using the second algorithm.
     """
     print("Starting comparison of algorithms.")
     start_time = time.time()

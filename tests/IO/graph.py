@@ -9,17 +9,27 @@ from tests.IO.constants import MAX_WEIGHT
 
 # ---- some graph generators ---
 def random_simple_graph(
-    n: int, is_directed: bool, p: float = 0.5, show_visualization=False
+    n: int, is_directed: bool, p: float = None, show_visualization=False
 ) -> np.ndarray:
+    """Builds a (strongly) connected random simple graph with n vertices and p as the probability of an edge.
+
+    Args:
+        n (int): Number of vertices.
+        is_directed (bool): True, if the graph should be directed.
+        p (float, optional): The probability of an edge existing. Defaults to None.
+        show_visualization (bool, optional): Plots the graph if True. Defaults to False.
+
+    Returns:
+        np.ndarray: An weighted adjacency matrix of the graph.
+    """
+    assert 0 < p <= 1 and "p must be in (0, 1]"
     if is_directed:
-        return _simple_graph_directed(n, p, show_visualization)
+        return _compute_directed(n, 0.5 if p is None else p, show_visualization)
     else:
-        return _simple_graph_undirected(n, p, show_visualization)
+        return _compute_undirected(n, 0.5 if p is None else p, show_visualization)
 
 
-def _simple_graph_undirected(
-    n: int, p: float = 0.5, show_visualization=False
-) -> np.ndarray:
+def _compute_undirected(n, p, show_visualization) -> np.ndarray:
     """Creates a undirected, simple and connected graph."""
     assert n >= 3
     G = nx.Graph()
@@ -48,9 +58,7 @@ def _simple_graph_undirected(
     return weights
 
 
-def _simple_graph_directed(
-    n: int, p: float = 0.3, show_visualization=False
-) -> np.ndarray:
+def _compute_directed(n, p, show_visualization) -> np.ndarray:
     """Creates a directed, simple and strongly connected graph."""
     assert n >= 3
     DiG = nx.DiGraph()
@@ -97,8 +105,8 @@ def _simple_graph_directed(
     return weights
 
 
-# --- read test cases ---
 def next_graph_input(f):
+    """Reads the next graph input from a file."""
     line = f.readline()
     if line == "":
         raise EOFError

@@ -1,3 +1,4 @@
+# Constant values for the test cases
 MAX_NUM_VERT_LOW = 6
 MAX_NUM_VERT_HIGH = 20
 FIXED_SIZE_N_LOW = 3

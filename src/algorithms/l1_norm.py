@@ -7,7 +7,7 @@ from src.utils.objectives import S
 from src.utils.solver import solve_minimisation_problem
 from src.utils.partition_matrix import (
     get_all_partition_matrices,
-    get_all_solution_vectors_parallel,
+    _compute_parallel,
 )
 
 MAX_SIZE = 8
@@ -75,7 +75,7 @@ def _compute(n: int, weights: np.ndarray) -> np.ndarray:
 
 # --- Parallel version ---
 def _argmin_parallel(n, k, solve_fn, score_fn):
-    return min(get_all_solution_vectors_parallel(n, k, solve_fn), key=score_fn)
+    return min(_compute_parallel(n, k, solve_fn), key=score_fn)
 
 
 def _expand_basis_set_parallel(

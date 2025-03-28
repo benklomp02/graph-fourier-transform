@@ -2,7 +2,7 @@ import time
 from statistics import mean
 import numpy as np
 
-from tests.IO.graph_generator import next_graph_input
+from tests.IO.graph import next_graph_input
 from src.utils.objectives import S
 
 

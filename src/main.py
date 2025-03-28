@@ -1,21 +1,23 @@
 import numpy as np
 import time
+from typing import Callable
 
 from src.algorithms.greedy import compute_greedy_basis
 from src.algorithms.laplacian import compute_laplacian_basis
 from src.algorithms.l1_norm import compute_l1_norm_basis
 from plot.utils.visualisation import visualize_graph_from_weights
 from tests.IO.examples import comet
-from tests.IO.graph_generator import next_graph_input
+from tests.IO.graph import next_graph_input
 from tests.utils.verifications import is_orthonormal_basis
 
 
 def _run_file(
-    compute_basis,
+    compute_basis: Callable[[int, np.ndarray], np.ndarray],
     file_path: str,
     console_output: bool = False,
     visualize: bool = False,
 ):
+    """Runs the example from a file."""
     try:
         with open(file_path, "r") as f:
             num_tests = int(f.readline())
@@ -31,12 +33,13 @@ def _run_file(
 
 
 def _run_example(
-    compute_basis,
+    compute_basis: Callable[[int, np.ndarray], np.ndarray],
     n: int,
     weights: np.ndarray,
     console_output: bool = False,
     visualize: bool = False,
 ):
+    """Runs a single example."""
     try:
         start_time = time.time()
         basis = compute_basis(n, weights)
@@ -59,11 +62,8 @@ def _run_example(
 
 
 if __name__ == "__main__":
-    # Example usage
-    from functools import partial
-
     _run_file(
-        lambda args: compute_greedy_basis(*args, is_directed=False),
+        compute_greedy_basis,
         "public/input/directed/input_N8_t100.txt",
         console_output=False,
     )

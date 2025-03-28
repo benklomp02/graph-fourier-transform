@@ -10,6 +10,11 @@ int *build_masked_array(int mask, int n)
     return arr;
 }
 
+void free_masked_array(int *masked_array)
+{
+    free(masked_array);
+}
+
 static int bit_count(int n)
 {
     int count = 0;

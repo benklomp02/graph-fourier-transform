@@ -3,7 +3,7 @@ import numpy as np
 from plot.utils.visualisation import visualize_graph_from_weights
 
 
-# --- some example graphs ---
+# ---- Example Graphs ----
 def path(n, visualize=False):
     weights = np.array(
         [[1 if i == j + 1 or i == j - 1 else 0 for j in range(n)] for i in range(n)]
