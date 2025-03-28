@@ -5,7 +5,6 @@ from line_profiler import profile
 
 
 # --- Sequential version ---
-@profile
 def get_all_partition_matrices(n: int, m: int):
     """Generating all partition matrices for a signal of size n with m different values."""
     assert n >= m >= 2
@@ -33,7 +32,7 @@ def get_all_partition_matrices(n: int, m: int):
 # --- Parallel version ---
 
 
-def get_all_solution_vectors_par(n: int, m: int, solve_fn):
+def get_all_solution_vectors_parallel(n: int, m: int, solve_fn):
     """Parallel version of generating all partition matrices for a signal of size n with m different values."""
     assert n >= m >= 2
     with ProcessPoolExecutor() as executor:

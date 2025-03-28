@@ -27,13 +27,11 @@ int *arg_max_greedy(int n, int *tau, double *memo)
     double max_val = -1.0;
     int best_a = 0, best_b = 0;
 
-    for (int j = 1; j < n; ++j)
+    for (int i = 1; i < n; ++i)
     {
-        for (int i = 0; i < j; ++i)
+        for (int j = 0; j < i; ++j)
         {
-            int denom = bit_count(tau[i]) * bit_count(tau[j]);
-            if (denom == 0)
-                continue;
+            double denom = bit_count(tau[i]) * bit_count(tau[j]);
             double val = memo[i * n + j] / denom;
             if (val > max_val)
             {
@@ -41,9 +39,15 @@ int *arg_max_greedy(int n, int *tau, double *memo)
                 best_a = i;
                 best_b = j;
             }
+            val = memo[j * n + i] / denom;
+            if (val > max_val)
+            {
+                max_val = val;
+                best_a = j;
+                best_b = i;
+            }
         }
     }
-
     result[0] = best_a;
     result[1] = best_b;
     return result;

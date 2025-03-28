@@ -18,18 +18,9 @@ def F(A: int, B: int, weights: np.ndarray) -> float:
     return lib.F(A, B, weights.ctypes.data_as(ctypes.POINTER(ctypes.c_double)), n)
 
 
-def S_undirected(x: np.ndarray, weights: np.ndarray) -> float:
+def S(x: np.ndarray, weights: np.ndarray) -> float:
     weights = np.ascontiguousarray(weights, dtype=np.float64).flatten()
-    return lib.S_undirected(
-        x.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
-        weights.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
-        x.size,
-    )
-
-
-def S_directed(x: np.ndarray, weights: np.ndarray) -> float:
-    weights = np.ascontiguousarray(weights, dtype=np.float64).flatten()
-    return lib.S_directed(
+    return lib.S(
         x.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
         weights.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
         x.size,

@@ -4,7 +4,6 @@ from scipy.sparse.linalg import svds, ArpackNoConvergence
 from line_profiler import profile
 
 
-@profile
 def solve_minimisation_problem(
     M: np.ndarray, U: np.ndarray = None, is_constant: bool = False
 ) -> np.ndarray:

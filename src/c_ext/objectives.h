@@ -5,8 +5,6 @@ double W(int A, int B, double *weights, int n);
 
 double F(int A, int B, double *weights, int n);
 
-int S_undirected(double *x, double **weights, int n);
-
-int S_directed(double *x, double **weights, int n);
+int S(double *x, double **weights, int n);
 
 #endif

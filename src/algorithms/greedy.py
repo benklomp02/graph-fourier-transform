@@ -1,31 +1,34 @@
 import numpy as np
-from itertools import combinations
 from line_profiler import profile
-from plot.utils.visualisation import visualize_graph_from_weights
 
 from src.utils.linalg import build_masked_array, arg_max_greedy
-from tests.utils.verifications import is_orthonormal_basis
-from tests.IO.examples import comet
 
 
-@profile
-def make_tuple(a: int, b: int) -> int:
-    # Avoid KeyError by using a sorted tuple as key
-    return (a, b) if a < b else (b, a)
-
-
-@profile
-def compute_greedy_basis_undirected(n: int, weights: np.ndarray) -> np.ndarray:
+def compute_greedy_basis(n: int, weights: np.ndarray) -> np.ndarray:
     """Computes the greedy basis.
 
     Args:
         n (int): The number of vertices
-        weights (np.ndarray): The weights for an undirected graph input for n vertices
-
+        weights (np.ndarray): The weights for a graph input for n vertices
     Returns:
         np.ndarray: An orthonormal basis
     """
-    # N groups
+    return _compute(n, weights)
+
+
+def compute_greedy_basis_dir(n: int, weights: np.ndarray) -> np.ndarray:
+    """Computes the greedy basis.
+
+    Args:
+        n (int): The number of vertices
+        weights (np.ndarray): The weights for a graph input for n vertices
+    Returns:
+        np.ndarray: An orthonormal basis
+    """
+    return _compute_dir(n, weights)
+
+
+def _compute(n: int, weights: np.ndarray) -> np.ndarray:
     tau = np.array([(1 << i) for i in range(n)])
     memo = weights.copy()
     basis = []
@@ -50,16 +53,7 @@ def compute_greedy_basis_undirected(n: int, weights: np.ndarray) -> np.ndarray:
     return np.column_stack(basis[::-1])
 
 
-def compute_greedy_basis_directed(n: int, weights: np.ndarray) -> np.ndarray:
-    """Computes the greedy basis.
-
-    Args:
-        n (int): The number of vertices
-        weights (np.ndarray): The weights for a directed graph input for n vertices
-
-    Returns:
-        np.ndarray: An orthonormal basis
-    """
+def _compute_dir(n: int, weights: np.ndarray) -> np.ndarray:
     tau = {(1 << i) for i in range(n)}
     memo = {(1 << i, 1 << j): weights[i][j] for j in range(n) for i in range(n)}
     basis = []
@@ -81,34 +75,3 @@ def compute_greedy_basis_directed(n: int, weights: np.ndarray) -> np.ndarray:
         basis.append(u)
     basis.append(np.sqrt(1 / n) * np.ones(n))
     return np.column_stack(basis[::-1])
-
-
-def run_file(file_path: str, is_directed: bool = False):
-    with open(file_path, "r") as f:
-        num_tests = int(f.readline())
-        for _ in range(num_tests):
-            n = int(f.readline())
-            weights = np.array([list(map(int, f.readline().split())) for _ in range(n)])
-            run_example(n, weights, is_directed)
-
-
-def run_example(n: int, weights: np.ndarray, is_directed: bool = False):
-    try:
-        if is_directed:
-            basis = compute_greedy_basis_directed(n, weights)
-            assert is_orthonormal_basis(basis)
-        else:
-            basis = compute_greedy_basis_undirected(n, weights)
-            assert is_orthonormal_basis(basis)
-        print("Greedy basis is orthonormal!")
-    except AssertionError:
-        print("Greedy basis is not orthonormal:")
-        print(basis)
-        visualize_graph_from_weights(weights)
-        raise
-
-
-if __name__ == "__main__":
-    np.set_printoptions(precision=3, suppress=True, linewidth=100)
-    # run_example(*comet(6), is_directed=False)
-    run_file("public/input/undirected/input_Nmax6_t100.txt")

@@ -3,7 +3,7 @@ from statistics import mean
 import numpy as np
 
 from tests.IO.graph_generator import next_graph_input
-from src.utils.objectives import S_undirected
+from src.utils.objectives import S
 
 
 # --- Measures of performance ---
@@ -25,16 +25,16 @@ def relative_error_single_vector(
 ) -> float:
     n = basis.shape[0]
     assert basis.shape == alt_basis.shape == (n,)
-    return (
-        S_undirected(basis, weights) - (s_alt := S_undirected(alt_basis, weights))
-    ) / s_alt
+    return (S(basis, weights) - (s_alt := S(alt_basis, weights))) / s_alt
 
 
 def relative_error(
-    basis: np.ndarray, alt_basis: np.ndarray, weights: np.ndarray
+    basis: np.ndarray,
+    alt_basis: np.ndarray,
+    weights: np.ndarray,
 ) -> float:
     assert basis.shape == alt_basis.shape
     return (
-        sum(S_undirected(u, weights) for u in basis.T)
-        - (s_alt := sum(S_undirected(u, weights) for u in alt_basis.T))
-    ) / s_alt
+        sum(S(u, weights) for u in basis.T)
+        - (s_alt := sum(S(u, weights) for u in alt_basis.T)) / s_alt
+    )

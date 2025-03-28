@@ -1,16 +1,21 @@
 import numpy as np
 
+from plot.utils.visualisation import visualize_graph_from_weights
+
 
 # --- some example graphs ---
-def path(n=7):
-    return n, np.array(
+def path(n, visualize=False):
+    weights = np.array(
         [[1 if i == j + 1 or i == j - 1 else 0 for j in range(n)] for i in range(n)]
     )
+    if visualize:
+        visualize_graph_from_weights(weights)
+    return weights
 
 
-def comet(n=7):
+def comet(n, visualize=False):
     m = n // 2
-    return n, np.array(
+    weights = np.array(
         [
             [
                 (
@@ -27,7 +32,13 @@ def comet(n=7):
             for i in range(n)
         ]
     )
+    if visualize:
+        visualize_graph_from_weights(weights)
+    return weights
 
 
-def sensor(n=8):
-    return n, np.array([[1 if i != j else 0 for j in range(n)] for i in range(n)])
+def sensor(n, visualize=False):
+    weights = np.array([[1 if i != j else 0 for j in range(n)] for i in range(n)])
+    if visualize:
+        visualize_graph_from_weights(weights)
+    return weights

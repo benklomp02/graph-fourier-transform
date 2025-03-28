@@ -3,13 +3,11 @@ from functools import reduce, partial
 from typing import List
 from line_profiler import profile
 
-from src.utils.objectives import S_undirected, S_directed
-from tests.utils.verifications import is_orthonormal_basis
-from tests.IO.examples import comet
+from src.utils.objectives import S
 from src.utils.solver import solve_minimisation_problem
 from src.utils.partition_matrix import (
     get_all_partition_matrices,
-    get_all_solution_vectors_par,
+    get_all_solution_vectors_parallel,
 )
 
 MAX_SIZE = 8
@@ -17,8 +15,25 @@ MAX_SIZE = 8
 # --- Sequential version ---
 
 
-@profile
-def expand_basis_set(
+def compute_l1_norm_basis(
+    n: int, weights: np.ndarray, run_parallel: bool = False
+) -> np.ndarray:
+    """Computes the l1 norm basis under the function S(x) in exponential time.
+
+    Args:
+        n (int): The number of vertices
+        weights (np.ndarray): The weights for a simple graph input for n vertices
+        run_parallel (bool): Whether to run the parallel version
+
+    Returns:
+        np.ndarray: An orthonormal basis
+    """
+    if run_parallel:
+        return _compute_parallel(n, weights)
+    return _compute(n, weights)
+
+
+def _expand_basis_set(
     basis: List[np.ndarray], k: int, weights: np.ndarray, n: int
 ) -> List[np.ndarray]:
     """Computes the kth iteration of the l1 norm algorithm."""
@@ -29,18 +44,17 @@ def expand_basis_set(
             partial(solve_minimisation_problem, U=U, is_constant=False),
             get_all_partition_matrices(n, k),
         ),
-        key=partial(S_undirected, weights=weights),
+        key=partial(S, weights=weights),
     )
     return basis + [uk]
 
 
-@profile
-def compute_l1_norm_basis_undirected(n: int, weights: np.ndarray) -> np.ndarray:
+def _compute(n: int, weights: np.ndarray) -> np.ndarray:
     """Computes the l1 norm basis under the function S(x) in exponential time.
 
     Args:
         n (int): The number of vertices
-        weights (np.ndarray): The weights for an undirected graph input for n vertices
+        weights (np.ndarray): The weights for a simple graph input for n vertices
 
     Returns:
         np.ndarray: An orthonormal basis
@@ -51,86 +65,48 @@ def compute_l1_norm_basis_undirected(n: int, weights: np.ndarray) -> np.ndarray:
             partial(solve_minimisation_problem, is_constant=True),
             get_all_partition_matrices(n, 2),
         ),
-        key=partial(S_undirected, weights=weights),
+        key=partial(S, weights=weights),
     )
     basis = reduce(
-        partial(expand_basis_set, weights=weights, n=n), range(3, 1 + n), [u1, u2]
-    )
-    return np.column_stack(basis)
-
-
-def compute_l1_norm_basis_directed(n: int, weights: np.ndarray) -> np.ndarray:
-    """Computes the l1 norm basis under the function S(x) in exponential time.
-
-    Args:
-        n (int): The number of vertices
-        weights (List[List[int]]): The weights for an undirected graph input for n vertices
-
-    Returns:
-        np.ndarray: An orthonormal basis
-    """
-    u1 = np.ones(n) / np.sqrt(n)
-    u2 = min(
-        map(
-            partial(solve_minimisation_problem, is_constant=True),
-            get_all_partition_matrices(n, 2),
-        ),
-        key=partial(S_directed, weights=weights),
-    )
-    basis = reduce(
-        partial(expand_basis_set, weights=weights, n=n), range(3, 1 + n), [u1, u2]
+        partial(_expand_basis_set, weights=weights, n=n), range(3, 1 + n), [u1, u2]
     )
     return np.column_stack(basis)
 
 
 # --- Parallel version ---
-def argmin_par(n, k, solve_fn, score_fn):
-    return min(get_all_solution_vectors_par(n, k, solve_fn), key=score_fn)
+def _argmin_parallel(n, k, solve_fn, score_fn):
+    return min(get_all_solution_vectors_parallel(n, k, solve_fn), key=score_fn)
 
 
-def expand_basis_set_par(
+def _expand_basis_set_parallel(
     basis: List[np.ndarray], k: int, weights: np.ndarray, n: int
 ) -> List[np.ndarray]:
     """Computes the kth iteration of the l1 norm algorithm."""
     assert k >= 3
     U = np.column_stack(basis)
     solve_fn = partial(solve_minimisation_problem, U=U, is_constant=False)
-    score_fn = partial(S_undirected, weights=weights)
-    uk = argmin_par(n, k, solve_fn, score_fn)
+    score_fn = partial(S, weights=weights)
+    uk = _argmin_parallel(n, k, solve_fn, score_fn)
     return basis + [uk]
 
 
-def compute_l1_norm_basis_undirected_par(n: int, weights: np.ndarray) -> np.ndarray:
+def _compute_parallel(n: int, weights: np.ndarray) -> np.ndarray:
     """Computes the l1 norm basis under the function S(x) in exponential time.
 
     Args:
         n (int): The number of vertices
-        weights (List[List[int]]): The weights for an undirected graph input for n vertices
+        weights (List[List[int]]): The weights for a simple graph input for n vertices
 
     Returns:
         np.ndarray: An orthonormal basis
     """
     u1 = np.ones(n) / np.sqrt(n)
     solve_fn = partial(solve_minimisation_problem, U=None, is_constant=True)
-    score_fn = partial(S_undirected, weights=weights)
-    u2 = argmin_par(n, 2, solve_fn, score_fn)
+    score_fn = partial(S, weights=weights)
+    u2 = _argmin_parallel(n, 2, solve_fn, score_fn)
     basis = reduce(
-        partial(expand_basis_set_par, weights=weights, n=n), range(3, 1 + n), [u1, u2]
+        partial(_expand_basis_set_parallel, weights=weights, n=n),
+        range(3, 1 + n),
+        [u1, u2],
     )
     return np.column_stack(basis)
-
-
-# --- Example ---
-
-
-def run_example(n: int, weights: np.ndarray):
-    print("l1 norm basis:")
-    basis = compute_l1_norm_basis_undirected(n, weights)
-    print(basis)
-    assert is_orthonormal_basis(basis)
-
-
-if __name__ == "__main__":
-    np.set_printoptions(precision=3, suppress=True, linewidth=100)
-    n, weights = comet(8)
-    run_example(n, np.array(weights))

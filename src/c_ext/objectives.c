@@ -1,4 +1,3 @@
-#include <math.h>
 
 double W(int A, int B, double *weights, int n)
 {
@@ -28,18 +27,7 @@ double F(int A, int B, double *weights, int n)
     return W(A, B, weights, n) / (bit_count(A) * bit_count(B));
 }
 
-double S_undirected(double *x, double *weights, int n)
-{
-    double sum = 0.;
-    for (int i = 1; i < n; ++i)
-        for (int j = 0; j < i; ++j)
-        {
-            sum += fabs(x[i] - x[j]) * weights[i * n + j];
-        }
-    return sum;
-}
-
-double S_directed(double *x, double *weights, int n)
+double S(double *x, double *weights, int n)
 {
     double sum = 0.;
     for (int i = 1; i < n; ++i)
