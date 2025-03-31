@@ -5,12 +5,19 @@ import os
 LIB_PATH = os.path.join(os.path.dirname(__file__), "../c_ext/libobjectives.so")
 lib = ctypes.CDLL(LIB_PATH)
 
+lib.W.restype = ctypes.c_double
+lib.W.argtypes = [ctypes.c_long, ctypes.c_long, ctypes.POINTER(ctypes.c_double)]
+
 
 def W(A: int, B: int, weights: np.ndarray) -> float:
     """Calculates the weighted objective function W(A, B) for two bitmasked sets A and B."""
     n = weights.shape[0]
     weights = np.ascontiguousarray(weights, dtype=np.float64).flatten()
     return lib.W(A, B, weights.ctypes.data_as(ctypes.POINTER(ctypes.c_double)), n)
+
+
+lib.F.restype = ctypes.c_double
+lib.F.argtypes = [ctypes.c_long, ctypes.c_long, ctypes.POINTER(ctypes.c_double)]
 
 
 def F(A: int, B: int, weights: np.ndarray) -> float:

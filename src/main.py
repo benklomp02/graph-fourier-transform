@@ -7,7 +7,7 @@ from src.algorithms.laplacian import compute_laplacian_basis
 from src.algorithms.l1_norm import compute_l1_norm_basis
 from plot.utils.visualisation import visualize_graph_from_weights
 from tests.IO.examples import comet
-from tests.IO.graph import next_graph_input
+from tests.IO.graph import read_graph_input
 from tests.utils.verifications import is_orthonormal_basis
 
 
@@ -24,7 +24,7 @@ def _run_file(
             for _ in range(num_tests):
                 _run_example(
                     compute_basis,
-                    *next_graph_input(f),
+                    *read_graph_input(f),
                     console_output,
                     visualize,
                 )

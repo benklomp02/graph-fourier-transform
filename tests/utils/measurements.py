@@ -2,7 +2,7 @@ import time
 from statistics import mean
 import numpy as np
 
-from tests.IO.graph import next_graph_input
+from tests.IO.graph import read_graph_input
 from src.utils.objectives import S
 
 
@@ -11,7 +11,7 @@ def average_time(f, compute_basis):
     num_tests = int(f.readline())
 
     def compute_and_stop():
-        n, weights = next_graph_input(f)
+        n, weights = read_graph_input(f)
         start = time.time()
         compute_basis(n, weights)
         return time.time() - start

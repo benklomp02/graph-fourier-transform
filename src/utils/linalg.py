@@ -9,7 +9,7 @@ LIB_PATH = os.path.join(os.path.dirname(__file__), "../c_ext/liblinalg.so")
 lib = ctypes.CDLL(LIB_PATH)
 
 lib.build_masked_array.restype = ctypes.POINTER(ctypes.c_int)
-lib.build_masked_array.argtypes = [ctypes.c_int, ctypes.c_int]
+lib.build_masked_array.argtypes = [ctypes.c_long, ctypes.c_int]
 
 lib.free_masked_array.restype = None
 lib.free_masked_array.argtypes = [ctypes.POINTER(ctypes.c_int)]
@@ -25,6 +25,7 @@ def build_masked_array(mask: int, n: int) -> np.ndarray:
     Returns:
         np.ndarray: An array of size n.
     """
+    assert n <= 64
     c_array_ptr = lib.build_masked_array(mask, n)
     x = np.ctypeslib.as_array(c_array_ptr, shape=(n,))
     weakref.finalize(x, lib.free_masked_array, c_array_ptr)
@@ -34,7 +35,7 @@ def build_masked_array(mask: int, n: int) -> np.ndarray:
 lib.arg_max_greedy.restype = ctypes.POINTER(ctypes.c_int)
 lib.arg_max_greedy.argtypes = [
     ctypes.c_int,
-    np.ctypeslib.ndpointer(dtype=np.int32),
+    np.ctypeslib.ndpointer(dtype=np.int64),
     np.ctypeslib.ndpointer(dtype=np.float64),
 ]
 
@@ -51,7 +52,8 @@ def arg_max_greedy(n: int, tau: np.ndarray, memo: np.ndarray) -> Tuple[int, int]
     Returns:
         Tuple[int, int]: A tuple containing the two indices that yield the maximum value.
     """
-    tau = np.ascontiguousarray(tau, dtype=np.int32)
+    assert n <= 64
+    tau = np.ascontiguousarray(tau, dtype=np.int64)
     memo = np.ascontiguousarray(memo, dtype=np.float64)
     c_array_ptr = lib.arg_max_greedy(n, tau.flatten(), memo.flatten())
     result = ctypes.cast(c_array_ptr, ctypes.POINTER(ctypes.c_int * 2)).contents

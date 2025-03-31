@@ -12,8 +12,6 @@ from src.utils.partition_matrix import (
 
 MAX_SIZE = 8
 
-# --- Sequential version ---
-
 
 def compute_l1_norm_basis(
     n: int, weights: np.ndarray, run_parallel: bool = False
@@ -73,7 +71,6 @@ def _compute(n: int, weights: np.ndarray) -> np.ndarray:
     return np.column_stack(basis)
 
 
-# --- Parallel version ---
 def _argmin_parallel(n, k, solve_fn, score_fn):
     return min(_compute_parallel(n, k, solve_fn), key=score_fn)
 

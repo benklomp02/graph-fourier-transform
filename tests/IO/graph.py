@@ -9,7 +9,7 @@ from tests.IO.constants import MAX_WEIGHT
 
 # ---- some graph generators ---
 def random_simple_graph(
-    n: int, is_directed: bool, p: float = None, show_visualization=False
+    n: int, is_directed: bool, p: float, show_visualization=False
 ) -> np.ndarray:
     """Builds a (strongly) connected random simple graph with n vertices and p as the probability of an edge.
 
@@ -24,9 +24,9 @@ def random_simple_graph(
     """
     assert 0 < p <= 1 and "p must be in (0, 1]"
     if is_directed:
-        return _compute_directed(n, 0.5 if p is None else p, show_visualization)
+        return _compute_directed(n, p, show_visualization)
     else:
-        return _compute_undirected(n, 0.5 if p is None else p, show_visualization)
+        return _compute_undirected(n, p, show_visualization)
 
 
 def _compute_undirected(n, p, show_visualization) -> np.ndarray:
@@ -105,11 +105,31 @@ def _compute_directed(n, p, show_visualization) -> np.ndarray:
     return weights
 
 
-def next_graph_input(f):
+def write_graph_input(n: int, weights: np.ndarray, f):
+    """Writes a graph input to a file."""
+    # Convert to adjacency list
+    m = np.count_nonzero(weights)
+    print(n, m, file=f)
+    for i in range(n):
+        for j in range(n):
+            if weights[i][j] != 0:
+                print(i, j, weights[i][j], file=f)
+
+
+def read_graph_input(f):
     """Reads the next graph input from a file."""
     line = f.readline()
     if line == "":
         raise EOFError
-    n = int(line)
-    weights = np.array([list(map(float, f.readline().split())) for _ in range(n)])
+    n, m = map(int, line.split())
+    # Read the adjacency list and store as adjacency matrix
+    DiG = nx.DiGraph()
+    DiG.add_nodes_from(range(n))
+    for _ in range(m):
+        line = f.readline()
+        x, y, wt = line.split()
+        DiG.add_edge(int(x), int(y), weight=float(wt))
+    weights = nx.to_numpy_array(DiG)
+    # Remove self-loops
+    np.fill_diagonal(weights, 0)
     return n, weights

@@ -1,6 +1,6 @@
 #include <stdlib.h>
 
-int *build_masked_array(int mask, int n)
+int *build_masked_array(long mask, int n)
 {
     int *arr = (int *)malloc(n * sizeof(int));
     for (int i = 0; i < n; i++)
@@ -10,12 +10,12 @@ int *build_masked_array(int mask, int n)
     return arr;
 }
 
-void free_masked_array(int *masked_array)
+void free_masked_array(long *masked_array)
 {
     free(masked_array);
 }
 
-static int bit_count(int n)
+static int bit_count(long n)
 {
     int count = 0;
     while (n)
@@ -26,7 +26,7 @@ static int bit_count(int n)
     return count;
 }
 
-int *arg_max_greedy(int n, int *tau, double *memo)
+int *arg_max_greedy(int n, long *tau, double *memo)
 {
     int *result = (int *)malloc(2 * sizeof(int));
     double max_val = -1.0;

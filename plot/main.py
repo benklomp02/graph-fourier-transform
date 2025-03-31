@@ -146,19 +146,17 @@ def comparison_of_nterm_approx():
     """
     This function compares the n-term approximation of the greedy and Laplacian basis.
     """
-    assert 3 <= MIN_N <= MAX_N
     print("Starting comparison of n-term approximation.")
     start_time = time.time()
 
-    x_axis = range(MIN_N, MAX_N + 1)
+    x_axis = [3, 4, 5, 6, 7, 8, 20, 30, 40, 50, 60]
 
     def metric_fn(n, weights, compute_basis):
+        # Compute a random laplacian signal
         signal = compute_random_laplacian_signal(n, weights)
-        errors = []
-        for n_approx in range(1, n + 1):
-            y_n = compute_nterm_error(n_approx, signal, weights, compute_basis)
-            errors.append(approx_error(signal, y_n))
-        return mean(errors)
+        # Compute the approximated error using the given basis function
+        error = compute_nterm_error(n, signal, weights, compute_basis)
+        return error
 
     greedy_errors = run_experiment(
         x_axis,
@@ -197,4 +195,4 @@ def run_all():
 
 
 if __name__ == "__main__":
-    comparison_of_variation_single_vector()
+    comparison_of_nterm_approx()

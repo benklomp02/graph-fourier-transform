@@ -4,11 +4,13 @@ import numpy as np
 from typing import Callable, List
 
 from statistics import mean
-from tests.IO.graph import next_graph_input
+from tests.IO.graph import read_graph_input
 
 
 def _input_filename(N: int, num_tests: int, directed: bool = False) -> str:
-    filename = f"public/input/{"directed" if directed else "undirected"}/input_N{N}_t{num_tests}.txt"
+    filename = (
+        f"public/input/{"directed" if directed else "undirected"}/N{N}_t{num_tests}.txt"
+    )
     if not os.path.exists(filename):
         print(f"File not found: {filename}")
     return filename
@@ -53,7 +55,7 @@ def run_experiment(
         with open(filename, "r") as f:
             tests = int(f.readline())
             values = [
-                metric_fn(*next_graph_input(f), compute_basis) for _ in range(tests)
+                metric_fn(*read_graph_input(f), compute_basis) for _ in range(tests)
             ]
             results.append(mean(values))
     return results
