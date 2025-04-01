@@ -26,6 +26,12 @@ def F(A: int, B: int, weights: np.ndarray) -> float:
     weights = np.ascontiguousarray(weights, dtype=np.float64).flatten()
     return lib.F(A, B, weights.ctypes.data_as(ctypes.POINTER(ctypes.c_double)), n)
 
+lib.S.restype = ctypes.c_double
+lib.S.argtypes = [
+    ctypes.POINTER(ctypes.c_double),
+    ctypes.POINTER(ctypes.c_double),
+    ctypes.c_int,
+]
 
 def S(x: np.ndarray, weights: np.ndarray) -> float:
     """The objective function S(x) for an input signal x."""
@@ -33,5 +39,6 @@ def S(x: np.ndarray, weights: np.ndarray) -> float:
     return lib.S(
         x.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
         weights.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
-        x.size,
+        x.shape[0],
     )
+            

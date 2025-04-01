@@ -1,10 +1,12 @@
 import numpy as np
 import time
 from typing import Callable
+from line_profiler import profile
 
 from src.algorithms.greedy import compute_greedy_basis
 from src.algorithms.laplacian import compute_laplacian_basis
 from src.algorithms.l1_norm import compute_l1_norm_basis
+from src.algorithms.l1_norm_cpp import compute_l1_norm_basis_cpp
 from plot.utils.visualisation import visualize_graph_from_weights
 from tests.IO.examples import comet
 from tests.IO.graph import read_graph_input
@@ -30,6 +32,10 @@ def _run_file(
                 )
     except FileNotFoundError:
         print(f"\033[91mERROR: File not found: {file_path}\033[0m")
+    finally:
+        print(
+            f"\033[92mFinished running all examples using {compute_basis.__name__}.\033[0m"
+        )
 
 
 def _run_example(
@@ -47,23 +53,24 @@ def _run_example(
         end_time = time.time()
         if console_output:
             print(f"\033[92m{compute_basis.__name__}: {end_time - start_time:.5f}s")
-            with np.printoptions(linewidth=100, threshold=1000, precision=3):
-                print(basis)
+            print(basis)
             print("\033[0m")
     except AssertionError:
         if console_output:
             print(f"\033[91mERROR: {compute_basis.__name__}\n")
-            with np.printoptions(linewidth=100, threshold=1000, precision=3):
-                print(basis)
+            print(basis)
             print("\033[0m")
         if visualize:
             visualize_graph_from_weights(weights)
         raise
 
+def _run_on_every_basis(n: int, weights: np.ndarray, console_output: bool = False, visualize: bool = False):
+    _run_example(compute_l1_norm_basis, n, weights, True, True)
+    _run_example(compute_l1_norm_basis_cpp, n, weights, True, True)
+    _run_example(compute_greedy_basis, n, weights, True, True)
+    _run_example(compute_laplacian_basis, n, weights, True, True)
 
 if __name__ == "__main__":
-    _run_file(
-        compute_greedy_basis,
-        "public/input/directed/input_N8_t100.txt",
-        console_output=False,
-    )
+    np.set_printoptions(threshold=1000, precision=3, suppress=True)
+    # TODO: Run an example or file
+    _run_on_every_basis(8, comet(8), True, True)

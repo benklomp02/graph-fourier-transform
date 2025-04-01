@@ -1,6 +1,7 @@
 import numpy as np
 import networkx as nx
 from scipy.linalg import eigh
+from line_profiler import profile
 
 
 def laplacian_matrix(

@@ -3,6 +3,7 @@ import numpy as np
 import os
 from typing import Tuple
 import weakref
+from functools import cache
 
 
 LIB_PATH = os.path.join(os.path.dirname(__file__), "../c_ext/liblinalg.so")
@@ -15,6 +16,7 @@ lib.free_masked_array.restype = None
 lib.free_masked_array.argtypes = [ctypes.POINTER(ctypes.c_int)]
 
 
+@cache
 def build_masked_array(mask: int, n: int) -> np.ndarray:
     """Returns a masked array of size n, where the indices specified by the mask are set to 1 and others to 0.
 

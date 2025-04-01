@@ -1,7 +1,7 @@
 import numpy as np
 from line_profiler import profile
 
-from src.utils.linalg import build_masked_array, arg_max_greedy
+from src.utils.c_linalg import build_masked_array, arg_max_greedy
 
 
 def compute_greedy_basis(n: int, weights: np.ndarray) -> np.ndarray:
@@ -16,8 +16,9 @@ def compute_greedy_basis(n: int, weights: np.ndarray) -> np.ndarray:
     return _compute(n, weights)
 
 
+@profile
 def _compute(n: int, weights: np.ndarray) -> np.ndarray:
-    tau = np.array([(1 << i) for i in range(n)])
+    tau = np.left_shift(1, np.arange(n))
     memo = weights.copy()
     basis = []
     for k in range(n - 1):
@@ -26,15 +27,13 @@ def _compute(n: int, weights: np.ndarray) -> np.ndarray:
         memo[gi][gi] = 0
         mask = np.arange(memo.shape[0]) != gj
         memo = memo[mask][:, mask]
-        t = 1 / np.sqrt(
-            tau[gi].bit_count()
-            * tau[gj].bit_count()
-            * (tau[gi].bit_count() + tau[gj].bit_count())
-        )
-        a = build_masked_array(tau[gi], n)
-        b = build_masked_array(tau[gj], n)
-        u = -t * tau[gj].bit_count() * a + t * tau[gi].bit_count() * b
-        tau[gi] |= tau[gj]
+        set_i, set_j = tau[gi], tau[gj]
+        nbit_i, nbit_j = set_i.bit_count(), set_j.bit_count()
+        t = 1 / np.sqrt(nbit_i * nbit_j * (nbit_i + nbit_j))
+        a = build_masked_array(set_i, n)
+        b = build_masked_array(set_j, n)
+        u = -t * nbit_j * a + t * nbit_i * b
+        tau[gi] |= set_j
         tau = np.delete(tau, gj)
         basis.append(u)
     basis.append(np.sqrt(1 / n) * np.ones(n))

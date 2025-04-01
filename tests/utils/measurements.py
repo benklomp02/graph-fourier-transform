@@ -3,7 +3,7 @@ from statistics import mean
 import numpy as np
 
 from tests.IO.graph import read_graph_input
-from src.utils.objectives import S
+from src.utils.c_objectives import S
 
 
 # --- Measures of performance ---

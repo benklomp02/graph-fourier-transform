@@ -1,12 +1,11 @@
 from typing import Callable, List
-from statistics import mean
 import time
 
 from plot.constants import *
 
 from plot.utils.experiment_runner import *
 from src.algorithms.greedy import compute_greedy_basis
-from src.algorithms.l1_norm import compute_l1_norm_basis
+from src.algorithms.l1_norm_cpp import compute_l1_norm_basis_cpp
 from src.algorithms.laplacian import compute_laplacian_basis
 from tests.utils.measurements import *
 from tests.utils.approx import *
@@ -29,7 +28,7 @@ def comparison_of_variation_single_vector(k: int = 2):
 
     metric_fn = lambda n, weights, basis: relative_error_single_vector(
         basis(n, weights)[:, (k - 1)],
-        compute_l1_norm_basis(n, weights)[:, (k - 1)],
+        compute_l1_norm_basis_cpp(n, weights)[:, (k - 1)],
         weights,
     )
 
@@ -71,7 +70,7 @@ def comparison_of_variation():
     x_axis = range(MIN_N, MAX_N + 1)
 
     metric_fn = lambda n, weights, basis: relative_error(
-        basis(n, weights), compute_l1_norm_basis(n, weights), weights
+        basis(n, weights), compute_l1_norm_basis_cpp(n, weights), weights
     )
 
     greedy_errors = run_experiment(
@@ -97,7 +96,7 @@ def comparison_of_variation():
 
 
 DEFAULT_FUNCTIONS = [
-    compute_l1_norm_basis,
+    compute_l1_norm_basis_cpp,
     compute_greedy_basis,
     compute_laplacian_basis,
 ]
@@ -142,57 +141,12 @@ def comparison_of_time(
     )
 
 
-def comparison_of_nterm_approx():
-    """
-    This function compares the n-term approximation of the greedy and Laplacian basis.
-    """
-    print("Starting comparison of n-term approximation.")
-    start_time = time.time()
-
-    x_axis = [3, 4, 5, 6, 7, 8, 20, 30, 40, 50, 60]
-
-    def metric_fn(n, weights, compute_basis):
-        # Compute a random laplacian signal
-        signal = compute_random_laplacian_signal(n, weights)
-        # Compute the approximated error using the given basis function
-        error = compute_nterm_error(n, signal, weights, compute_basis)
-        return error
-
-    greedy_errors = run_experiment(
-        x_axis,
-        NUM_TESTS,
-        compute_greedy_basis,
-        metric_fn,
-        IS_DIRECTED,
-    )
-
-    laplacian_errors = run_experiment(
-        x_axis, NUM_TESTS, compute_laplacian_basis, metric_fn, IS_DIRECTED
-    )
-    print(
-        f"Finished comparison of n-term approximation in {time.time()-start_time:.2f} seconds."
-    )
-    plot_title = "Comparison of n-term approximation"
-    plot_and_save(
-        plot_title,
-        x_axis,
-        [greedy_errors, laplacian_errors],
-        ["Greedy", "Laplacian"],
-        "n",
-        "Average relative error",
-        num_tests=NUM_TESTS,
-        save_fig=SAVE_FIG,
-        show_plot=SHOW_PLOT,
-        is_directed=IS_DIRECTED,
-    )
-
 
 def run_all():
     comparison_of_variation_single_vector()
     comparison_of_variation()
     comparison_of_time()
-    comparison_of_nterm_approx()
 
 
 if __name__ == "__main__":
-    comparison_of_nterm_approx()
+    run_all()
