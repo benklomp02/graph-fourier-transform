@@ -1,113 +1,75 @@
 import numpy as np
 import networkx as nx
 from itertools import combinations
-from random import shuffle
+from typing import Tuple
 
-from plot.utils.visualisation import visualize_graph
-from tests.IO.constants import MAX_WEIGHT
+from plot.utils.visualisation import visualize_graph_from_weights
 
 
 # ---- some graph generators ---
 def random_simple_graph(
-    n: int, is_directed: bool, p: float, show_visualization=False
+    n: int, is_directed: bool, show_visualization=False
 ) -> np.ndarray:
     """Builds a (strongly) connected random simple graph with n vertices and p as the probability of an edge.
 
     Args:
         n (int): Number of vertices.
         is_directed (bool): True, if the graph should be directed.
-        p (float, optional): The probability of an edge existing. Defaults to None.
         show_visualization (bool, optional): Plots the graph if True. Defaults to False.
 
     Returns:
         np.ndarray: An weighted adjacency matrix of the graph.
     """
-    assert 0 < p <= 1 and "p must be in (0, 1]"
     if is_directed:
-        return _compute_directed(n, p, show_visualization)
+        return _compute_directed(n, show_visualization)
     else:
-        return _compute_undirected(n, p, show_visualization)
+        return _compute_undirected(n, show_visualization)
 
 
-def _compute_undirected(n, p, show_visualization) -> np.ndarray:
+def _compute_distance(x: Tuple[int, int], y: Tuple[int, int]) -> float:
+    """Computes the distance between two points."""
+    return np.sqrt((x[0] - y[0]) ** 2 + (x[1] - y[1]) ** 2)
+
+
+def _compute_undirected(n, show_visualization: bool = False) -> np.ndarray:
     """Creates a undirected, simple and connected graph."""
     assert n >= 3
+    thres = 1 / np.sqrt(n)
     G = nx.Graph()
     G.add_nodes_from(range(n))
-    for x, y in combinations(range(n), 2):
-        if np.random.rand() < p:
-            wt = np.random.randint(1, MAX_WEIGHT)
-            G.add_edge(x, y, weight=wt)
-    if not nx.is_connected(G):
-        zhks = list(nx.connected_components(G))
-        for A, B in zip(zhks, zhks[1:]):
-            x, y = np.random.choice(list(A)), np.random.choice(list(B))
-            wt = np.random.randint(1, MAX_WEIGHT)
-            G.add_edge(x, y, weight=wt)
-    if show_visualization:
-        visualize_graph(G)
-    try:
-        assert nx.is_connected(G)
-    except AssertionError:
-        print("The graph is not connected.")
-        visualize_graph(G)
-        exit(1)
+    while True:
+        points = [(np.random.rand(), np.random.rand()) for _ in range(n)]
+        indices = list(range(n))
+        list.sort(indices, key=points.__getitem__)
+        for i in range(1, n):
+            for j in range(i):
+                if _compute_distance(points[indices[i]], points[indices[j]]) < thres:
+                    G.add_edge(indices[i], indices[j], weight=1)
+        if nx.is_connected(G):
+            break
+        thres = thres * 1.1  # Increase the threshold
     weights = nx.to_numpy_array(G)
-    # Remove self-loops
-    np.fill_diagonal(weights, 0)
+    if show_visualization:
+        visualize_graph_from_weights(weights)
     return weights
 
 
-def _compute_directed(n, p, show_visualization) -> np.ndarray:
-    """Creates a directed, simple and strongly connected graph."""
+def _compute_directed(n, show_visualization) -> np.ndarray:
+    """Creates a directed, simple and weakly connected graph."""
     assert n >= 3
-    DiG = nx.DiGraph()
-    DiG.add_nodes_from(range(n))
-    # Hardcode the base case
-    DiG.add_edge(0, 1, weight=np.random.randint(1, MAX_WEIGHT))
-    DiG.add_edge(1, 2, weight=np.random.randint(1, MAX_WEIGHT))
-    DiG.add_edge(2, 0, weight=np.random.randint(1, MAX_WEIGHT))
-    i = 3
-    while i < n:
-        # let us create a strongly connected component
-        _n = np.random.randint(1, n - i + 1)
-        _adj = list(range(i, i + _n))
-        shuffle(_adj)
-        for x, y in zip(_adj, _adj[1:]):
-            DiG.add_edge(x, y, weight=np.random.randint(1, MAX_WEIGHT))
-        DiG.add_edge(_adj[-1], _adj[0], weight=np.random.randint(1, MAX_WEIGHT))
-        # Then we connect the strongly connected components
-        x_new, y_con = np.random.choice(_adj), np.random.choice(range(i))
-        DiG.add_edge(x_new, y_con, weight=np.random.randint(1, MAX_WEIGHT))
-        y_new, x_con = np.random.choice(_adj), np.random.choice(range(i))
-        while x_con == y_con:  # There are at least three nodes...
-            x_con = np.random.choice(range(i))
-        DiG.add_edge(x_con, y_new, weight=np.random.randint(1, MAX_WEIGHT))
-        i += _n
-    # Let's add some random edges
-    vertices = list(range(n))
-    shuffle(vertices)
-    for x, y in combinations(range(n), 2):
-        if np.random.rand() < p:
-            DiG.add_edge(x, y, weight=np.random.randint(1, MAX_WEIGHT))
+    weights = _compute_undirected(n, False)
+    for i, j in combinations(range(n), 2):
+        if np.random.rand() < 0.5:
+            weights[j][i] = 0
+        else:
+            weights[i][j] = 0
     if show_visualization:
-        visualize_graph(DiG)
-    # Check if the graph is strongly connected
-    try:
-        assert nx.is_strongly_connected(DiG)
-    except AssertionError:
-        print("The graph is not strongly connected")
-        visualize_graph(DiG)
-        exit(1)
-    weights = nx.to_numpy_array(DiG)
-    # Remove self-loops
-    np.fill_diagonal(weights, 0)
+        visualize_graph_from_weights(weights)
     return weights
 
 
 def write_graph_input(n: int, weights: np.ndarray, f):
     """Writes a graph input to a file."""
-    # Convert to adjacency list
     m = np.count_nonzero(weights)
     print(n, m, file=f)
     for i in range(n):
@@ -130,8 +92,6 @@ def read_graph_input(f):
         x, y, wt = line.split()
         DiG.add_edge(int(x), int(y), weight=float(wt))
     weights = nx.to_numpy_array(DiG)
-    # Remove self-loops
-    np.fill_diagonal(weights, 0)
     return n, weights
 
 
@@ -139,10 +99,31 @@ def read_graph_input(f):
 
 
 def random_signal(n: int) -> np.ndarray:
-    """Generates a random signal of length n."""
-    return np.random.randint(1, MAX_WEIGHT, size=(n,))
+    """Generates a random signal of length n of only 0 and 1."""
+    return np.random.randint(0, 2, size=n)
 
 
 def random_signal_matrix(n: int, m: int) -> np.ndarray:
     """Generates a random signal matrix of shape (n, m)."""
-    return np.random.randint(1, MAX_WEIGHT, size=(n, m))
+    return np.random.randint(0, 2, size=(n, m))
+
+
+# ---- some example usage ----
+
+
+def _example():
+    """Example usage of the graph generator."""
+    n = 10
+    is_directed = False
+    show_visualization = True
+
+    # Generate a random simple graph
+    weights = random_simple_graph(n, is_directed, show_visualization)
+
+    # Print the generated graph
+    print("Generated Graph (Adjacency Matrix):")
+    print(weights)
+
+
+if __name__ == "__main__":
+    _example()

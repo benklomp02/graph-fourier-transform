@@ -1,5 +1,5 @@
 # Constants for the experiment
-IS_DIRECTED = False
+IS_DIRECTED = True
 MIN_N = 3
 MAX_N = 8
 SHOW_PLOT = False

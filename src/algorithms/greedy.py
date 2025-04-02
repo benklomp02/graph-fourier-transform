@@ -18,6 +18,7 @@ def compute_greedy_basis(n: int, weights: np.ndarray) -> np.ndarray:
 
 @profile
 def _compute(n: int, weights: np.ndarray) -> np.ndarray:
+    assert n <= 60
     tau = np.left_shift(1, np.arange(n))
     memo = weights.copy()
     basis = []

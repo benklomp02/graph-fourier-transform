@@ -41,6 +41,14 @@ def relative_error(
     return (sum(S(u, weights) for u in basis.T) - s_alt) / (s_alt + 1e-10)
 
 
+def relative_total_variation(
+    n: int,
+    basis: np.ndarray,
+    weights: np.ndarray,
+) -> float:
+    return np.sum(S(u, weights) for u in basis.T) / n
+
+
 def projection_difference(basis: np.ndarray, alt_basis: np.ndarray) -> float:
     """
     Compute the projection difference between two orthonormal bases.

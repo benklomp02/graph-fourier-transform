@@ -1,5 +1,6 @@
 #include <stdlib.h>
 
+// The function creates a masked array of size n, where each element is either 0 or 1.
 int *build_masked_array(long mask, int n)
 {
     int *arr = (int *)malloc(n * sizeof(int));
@@ -26,6 +27,9 @@ static int bit_count(long n)
     return count;
 }
 
+// Finds the best indices i, j s.t that the ratio of
+// memo[i][j] / (bit_count(tau[i]) * bit_count(tau[j])),
+// i.e. the function F in the script, is maximized.
 int *arg_max_greedy(int n, long *tau, double *memo)
 {
     int *result = (int *)malloc(2 * sizeof(int));

@@ -3,6 +3,8 @@
 #include <coroutine>
 #include <optional>
 
+// A class created for the single purpose of replacing the <generator>
+// header which is only available in C++/23.
 template <typename T>
 class generator
 {

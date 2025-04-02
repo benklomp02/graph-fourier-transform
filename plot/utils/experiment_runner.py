@@ -46,7 +46,7 @@ def run_experiment(
     n_range: range,
     num_tests: int,
     compute_basis: compute_basis_t,
-    metric_fn: compute_basis_t,
+    metric_fn: Callable[[int, np.ndarray, compute_basis_t], float],
     is_directed: bool,
 ) -> List[float]:
     """

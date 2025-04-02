@@ -11,87 +11,48 @@ from tests.utils.measurements import *
 from tests.utils.approx import *
 
 
-def comparison_of_variation_single_vector(k: int = 2):
-    """
-    WARNING: This function is computationally intensive.
-
-    This function compares the variation of the greedy and Laplacian basis
-    for a single vector.
-
-    Args:
-        k (int, optional): The chosen vector indexed by 1. Defaults to 2.
-    """
-    print(f"Starting comparison of variation on single vector k={k}.")
-    start_time = time.time()
-    assert 3 <= MIN_N <= MAX_N and 0 <= k < MIN_N
-    x_axis = range(MIN_N, MAX_N + 1)
-
-    metric_fn = lambda n, weights, basis: relative_error_single_vector(
-        basis(n, weights)[:, (k - 1)],
-        compute_l1_norm_basis_cpp(n, weights)[:, (k - 1)],
-        weights,
-    )
-
-    greedy_errors = run_experiment(
-        x_axis, NUM_TESTS, compute_greedy_basis, metric_fn, IS_DIRECTED
-    )
-    laplacian_errors = run_experiment(
-        x_axis, NUM_TESTS, compute_laplacian_basis, metric_fn, IS_DIRECTED
-    )
-
-    print(
-        f"Finished comparison of variation on single vector k={k} in {time.time()-start_time:.2f} seconds."
-    )
-    plot_title = f"Comparison of variation on single vector k={k}"
-    plot_and_save(
-        plot_title,
-        x_axis,
-        [greedy_errors, laplacian_errors],
-        ["Greedy", "Laplacian"],
-        "N",
-        "Average relative error",
-        num_tests=NUM_TESTS,
-        save_fig=SAVE_FIG,
-        show_plot=SHOW_PLOT,
-        is_directed=IS_DIRECTED,
-    )
-
-
-def comparison_of_variation():
+def comparison_of_variation(
+    num_tests: int = NUM_TESTS,
+    is_directed: bool = IS_DIRECTED,
+    save_fig: bool = SAVE_FIG,
+    show_plot: bool = SHOW_PLOT,
+    min_n: int = MIN_N,
+    max_n: int = MAX_N,
+):
     """
     WARNING: This function is computationally intensive.
 
     This function compares the variation of the greedy and Laplacian basis
     for all vectors.
     """
-    assert 3 <= MIN_N <= MAX_N
+    assert 3 <= min_n <= max_n
     print("Starting comparison of variation.")
     start_time = time.time()
-    x_axis = range(MIN_N, MAX_N + 1)
+    x_axis = range(min_n, max_n + 1)
 
-    metric_fn = lambda n, weights, basis: relative_error(
-        basis(n, weights), compute_l1_norm_basis_cpp(n, weights), weights
-    )
+    def metric_fn(n, weights, compute_basis):
+        basis = compute_basis(n, weights)
+        return relative_total_variation(n, basis, weights)
 
     greedy_errors = run_experiment(
-        x_axis, NUM_TESTS, compute_greedy_basis, metric_fn, IS_DIRECTED
+        x_axis, num_tests, compute_greedy_basis, metric_fn, is_directed
     )
-    laplacian_errors = run_experiment(
-        x_axis, NUM_TESTS, compute_laplacian_basis, metric_fn, IS_DIRECTED
+    exact_errors = run_experiment(
+        x_axis, num_tests, compute_l1_norm_basis_cpp, metric_fn, is_directed
     )
     print(f"Finished comparison of variation in {time.time()-start_time:.2f} seconds.")
     plot_title = "Comparison of variation"
     plot_and_save(
         plot_title,
         x_axis,
-        [greedy_errors, laplacian_errors],
-        ["Greedy", "Laplacian"],
+        [greedy_errors, exact_errors],
+        ["Greedy", "L1 Norm"],
         "N",
-        "Average relative error",
-        num_tests=NUM_TESTS,
-        save_fig=NUM_TESTS,
-        show_plot=SHOW_PLOT,
-        is_directed=IS_DIRECTED,
+        "Relative error compared to N",
+        num_tests=num_tests,
+        save_fig=save_fig,
+        show_plot=show_plot,
+        is_directed=is_directed,
     )
 
 
@@ -107,6 +68,12 @@ DEFAULT_LABELS = ["L1 Norm", "Greedy", "Laplacian"]
 def comparison_of_time(
     xfunc: List[Callable] = DEFAULT_FUNCTIONS,
     series_labels: List[str] = DEFAULT_LABELS,
+    num_tests: int = NUM_TESTS,
+    is_directed: bool = IS_DIRECTED,
+    save_fig: bool = SAVE_FIG,
+    show_plot: bool = SHOW_PLOT,
+    min_n: int = MIN_N,
+    max_n: int = MAX_N,
 ):
     """
     WARNING: This function may be computationally intensive depending on the provided functions.
@@ -117,12 +84,12 @@ def comparison_of_time(
     """
     print("Starting comparison of time.")
     start_time = time.time()
-    assert 3 <= MIN_N <= MAX_N
-    x_axis = range(MIN_N, MAX_N + 1)
+    assert 3 <= min_n <= max_n
+    x_axis = range(min_n, max_n + 1)
 
     time_metric = lambda f, basis: average_time(f, basis)
     series = [
-        run_experiment_file(x_axis, NUM_TESTS, basis, time_metric, IS_DIRECTED)
+        run_experiment_file(x_axis, num_tests, basis, time_metric, is_directed)
         for basis in xfunc
     ]
     print(f"Finished comparison of time in {time.time()-start_time:.2f} seconds.")
@@ -134,19 +101,51 @@ def comparison_of_time(
         series_labels,
         "N",
         "Average time",
-        num_tests=NUM_TESTS,
-        save_fig=SAVE_FIG,
-        show_plot=SHOW_PLOT,
-        is_directed=IS_DIRECTED,
+        num_tests=num_tests,
+        save_fig=save_fig,
+        show_plot=show_plot,
+        is_directed=is_directed,
     )
 
 
-
-def run_all():
-    comparison_of_variation_single_vector()
-    comparison_of_variation()
-    comparison_of_time()
+def main():
+    comparison_of_variation(
+        num_tests=20,
+        is_directed=False,
+        save_fig=True,
+        show_plot=False,
+        min_n=3,
+        max_n=8,
+    )
+    comparison_of_variation(
+        num_tests=20,
+        is_directed=True,
+        save_fig=True,
+        show_plot=False,
+        min_n=3,
+        max_n=8,
+    )
+    comparison_of_time(
+        xfunc=DEFAULT_FUNCTIONS,
+        series_labels=DEFAULT_LABELS,
+        num_tests=20,
+        is_directed=False,
+        save_fig=True,
+        show_plot=False,
+        min_n=3,
+        max_n=8,
+    )
+    comparison_of_time(
+        xfunc=DEFAULT_FUNCTIONS,
+        series_labels=DEFAULT_LABELS,
+        num_tests=20,
+        is_directed=True,
+        save_fig=True,
+        show_plot=False,
+        min_n=3,
+        max_n=8,
+    )
 
 
 if __name__ == "__main__":
-    run_all()
+    main()

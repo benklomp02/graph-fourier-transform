@@ -1,5 +1,8 @@
 #include "partition_matrix.hpp"
 
+// Every partition matrix is calculated recursively. At each step, we have a set of
+// values that are already used (free) and a set of values that must be used (toBeUsed).
+// By separating the two sets, we can generate all possible matrices without duplications.
 generator<Eigen::MatrixXd> compute(
     int n, int m, int i,
     uint32_t free, uint32_t toBeUsed,
@@ -38,6 +41,8 @@ generator<Eigen::MatrixXd> compute(
     }
 }
 
+// This function generates all partition matrices of size n x m.
+// n is the signal siize and m the number of different values.
 generator<Eigen::MatrixXd> get_all_partition_matrices(int n, int m)
 {
     Eigen::MatrixXd M = Eigen::MatrixXd::Zero(n, m);

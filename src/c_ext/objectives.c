@@ -27,6 +27,7 @@ double F(long A, long B, double *weights, int n)
     return W(A, B, weights, n) / (bit_count(A) * bit_count(B));
 }
 
+// Objective function working for both directed and undirected graphs.
 double S(double *x, double *weights, int n)
 {
     double sum = 0.;

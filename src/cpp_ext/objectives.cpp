@@ -1,5 +1,6 @@
 #include "objectives.hpp"
 
+// The objective function working for both directed and undirected graphs.
 double S(const Eigen::VectorXd &x, const Eigen::MatrixXd &weights)
 {
     int n = x.size();
