@@ -133,3 +133,16 @@ def read_graph_input(f):
     # Remove self-loops
     np.fill_diagonal(weights, 0)
     return n, weights
+
+
+# ---- some random signal generators ----
+
+
+def random_signal(n: int) -> np.ndarray:
+    """Generates a random signal of length n."""
+    return np.random.randint(1, MAX_WEIGHT, size=(n,))
+
+
+def random_signal_matrix(n: int, m: int) -> np.ndarray:
+    """Generates a random signal matrix of shape (n, m)."""
+    return np.random.randint(1, MAX_WEIGHT, size=(n, m))

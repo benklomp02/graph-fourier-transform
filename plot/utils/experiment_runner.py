@@ -6,22 +6,22 @@ from typing import Callable, List
 from statistics import mean
 from tests.IO.graph import read_graph_input
 
+compute_basis_t = Callable[[int, np.ndarray], np.ndarray]
+
 
 def _input_filename(N: int, num_tests: int, directed: bool = False) -> str:
-    filename = (
-        f"public/input/{"directed" if directed else "undirected"}/N{N}_t{num_tests}.txt"
-    )
+    filename = f"public/input/{"directed" if directed else "undirected"}/N{N}_t{num_tests}.txt".lower()
     if not os.path.exists(filename):
         print(f"File not found: {filename}")
     return filename
 
 
 def _saved_filename(title: str, num_tests: int, directed: bool = False):
-    return f"public/plots/{"directed" if directed else "undirected"}/{title.replace(" ", "_")}_t{num_tests}.png"
+    return f"public/output/{"directed" if directed else "undirected"}/{title.replace(" ", "_")}_t{num_tests}.png".lower()
 
 
 def _saved_filename_log(title: str, num_tests: int, directed: bool = False):
-    return f"public/plots/{"directed" if directed else "undirected"}/{title.replace(" ", "_")}_t{num_tests}_log.png"
+    return f"public/output/{"directed" if directed else "undirected"}/{title.replace(" ", "_")}_t{num_tests}_log.png".lower()
 
 
 def _plt_config(title: str, xlabel: str, ylabel: str, log: bool = False):
@@ -34,11 +34,19 @@ def _plt_config(title: str, xlabel: str, ylabel: str, log: bool = False):
         plt.yscale("log")
 
 
+def compute_basis_placeholder(n: int, weights: np.ndarray) -> np.ndarray:
+    """
+    Placeholder function for computing the basis.
+    This function should never be called.
+    """
+    raise NotImplementedError("This function should only be used as a placeholder.")
+
+
 def run_experiment(
     n_range: range,
     num_tests: int,
-    compute_basis: Callable[[int, np.ndarray], np.ndarray],
-    metric_fn: Callable[[int, np.ndarray, np.ndarray], float],
+    compute_basis: compute_basis_t,
+    metric_fn: compute_basis_t,
     is_directed: bool,
 ) -> List[float]:
     """
@@ -61,10 +69,34 @@ def run_experiment(
     return results
 
 
+def run_experiment_pair(
+    n_range,
+    num_tests: int,
+    compute_basis_A: compute_basis_t,
+    compute_basis_B: compute_basis_t,
+    metric_fn: Callable[[int, np.ndarray, compute_basis_t, compute_basis_t], float],
+    is_directed: bool,
+):
+    results = []
+    for n in n_range:
+        filename = _input_filename(n, num_tests, is_directed)
+        if not os.path.exists(filename):
+            print(f"Skipping non-existent file: {filename}")
+            continue
+        with open(filename, "r") as f:
+            tests = int(f.readline())
+            values = []
+            for _ in range(tests):
+                n, weights = read_graph_input(f)
+                values.append(metric_fn(n, weights, compute_basis_A, compute_basis_B))
+            results.append(mean(values))
+    return results
+
+
 def run_experiment_file(
     n_range: range,
     num_tests: int,
-    compute_basis: Callable[[int, np.ndarray], np.ndarray],
+    compute_basis: compute_basis_t,
     metric_fn: Callable[[int, np.ndarray], float],
     is_directed: bool,
 ) -> List[float]:
